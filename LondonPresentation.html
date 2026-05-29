@@ -1,0 +1,2987 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Salesforce Technical Debt</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/theme/white.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/monokai.min.css">
+  <style>
+
+    /* ── Typographie & couleurs ── */
+    .reveal { font-size: 20px; font-family: 'Segoe UI', Arial, sans-serif; }
+    .reveal h1 { color: #D97706; font-size: 1.85em; margin: 0 0 0.2em; line-height: 1.2; }
+    .reveal h2 {
+      color: #1E293B; font-size: 1.3em; margin: 0 0 0.2em; line-height: 1.2;
+      border-bottom: 2px solid #D97706; padding-bottom: 3px; display: inline-block;
+    }
+    .reveal h3 { color: #7C3AED; font-size: 1.0em; margin: 0 0 0.2em; font-weight: 600; }
+    .reveal p  { margin: 0.2em 0; }
+    .reveal ul { margin: 0.15em 0; padding-left: 1.3em; }
+    .reveal li { margin: 0.1em 0; }
+    .reveal strong { color: #1E40AF; }
+    /* ── Code ── */
+    .reveal code {
+      background: #1E293B; color: #E2E8F0; padding: 2px 7px;
+      border-radius: 4px; font-size: 0.82em; font-family: 'Consolas', monospace;
+    }
+    .reveal pre {
+      font-size: 0.72em; margin: 0.2em 0; line-height: 1.4;
+      border-radius: 6px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    }
+    .reveal pre code { font-size: 1em; padding: 0.6em 0.9em; background: #272822; color: #f8f8f2; }
+    /* ── Blockquote ── */
+    .reveal blockquote {
+      border-left: 4px solid #D97706; background: #FFFBEB;
+      padding: 4px 12px; margin: 0.3em 0; font-style: italic;
+      font-size: 0.88em; width: auto; box-shadow: none;
+    }
+    /* ── Tableaux ── */
+    .reveal table { width: 100%; font-size: 0.82em; border-collapse: collapse; margin: 0.3em 0; }
+    .reveal th { background: #1D4ED8; color: white; padding: 4px 8px; }
+    .reveal td { padding: 3px 8px; border-bottom: 1px solid #E2E8F0; }
+    .reveal tr:nth-child(even) td { background: #F8FAFC; }
+    /* ── Numéro de slide ── */
+    .reveal .slide-number { font-size: 14px; color: #fff; background: rgba(0,0,0,0.45); padding: 3px 8px; border-radius: 5px; right: auto; left: 8px; }
+    /* ── Popup styles ── */
+    .popup-teaser { cursor: pointer; }
+    .popup-more-hint { display: inline-block; font-size: 0.75em; opacity: 0.55;
+                       margin-left: 8px; font-style: italic; }
+    .popup-body { margin-top: 10px; }
+    .popup-body .tw { opacity: 0; transition: opacity 0.05s; }
+    .popup-overlay {
+      display: none; opacity: 0; transform: translateX(30px);
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+    .popup-overlay.popup-visible { opacity: 1; transform: translateX(0); }
+    /* ── Indicateur fragments restants ── */
+    #frag-indicator {
+      position: fixed; top: 12px; left: 16px; color: #EF4444;
+      font-size: 1.6em; font-weight: 900; z-index: 1000; opacity: 0;
+      transition: opacity 0.25s; pointer-events: none; line-height: 1;
+    }
+    .reveal:has(.present .fragment:not(.visible)) #frag-indicator { opacity: 1; }
+    /* ── Bloc header slides ── */
+    .bloc-center {
+      display: flex; flex-direction: column; justify-content: center;
+      align-items: center; height: 100%; text-align: center;
+    }
+    .bloc-num {
+      font-size: 0.65em; color: #94A3B8; text-transform: uppercase;
+      letter-spacing: 0.2em; margin-bottom: 10px;
+    }
+    .bloc-sub { font-size: 0.88em; color: #475569; margin: 8px 0 16px; }
+    .pills { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 12px; }
+    .pill {
+      display: inline-block; background: #F1F5F9; border: 1px solid #CBD5E1;
+      border-radius: 20px; padding: 5px 16px; font-size: 0.85em; color: #475569;
+    }
+    .bloc-center .bloc-num,
+    .bloc-center h1,
+    .bloc-center .bloc-sub,
+    .bloc-center .pill {
+      opacity: 0; transform: translateY(15px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    .bloc-center.anim-running .bloc-num { opacity: 1; transform: none; }
+    .bloc-center.anim-running h1   { opacity: 1; transform: none; transition-delay: 0.2s; }
+    .bloc-center.anim-running .bloc-sub { opacity: 1; transform: none; transition-delay: 0.4s; }
+    .bloc-center.anim-running .pill:nth-child(1) { opacity:1; transform:none; transition-delay:0.65s; }
+    .bloc-center.anim-running .pill:nth-child(2) { opacity:1; transform:none; transition-delay:0.80s; }
+    .bloc-center.anim-running .pill:nth-child(3) { opacity:1; transform:none; transition-delay:0.95s; }
+    .bloc-center.anim-running .pill:nth-child(4) { opacity:1; transform:none; transition-delay:1.10s; }
+    /* ── Brise-glace ── */
+    .bt-center {
+      display: flex; flex-direction: column; justify-content: center;
+      align-items: center; height: 100%;
+    }
+    .bt-list {
+      display: flex; flex-direction: column; gap: 10px; margin: 16px 0;
+      width: 100%; max-width: 720px;
+    }
+    .bt-item {
+      background: #F8FAFC; border: 2px solid #E2E8F0; border-radius: 10px;
+      padding: 10px 18px; font-size: 0.95em; color: #1E293B;
+      opacity: 0; transform: translateY(8px);
+      transition: opacity 0.35s ease, transform 0.35s ease,
+                  background 0.3s, border-color 0.3s;
+    }
+    .bt-item.visible { opacity: 1; transform: none; background: #EFF6FF; border-color: #93C5FD; }
+    .bt-punchline {
+      font-size: 1.05em; font-weight: 700; color: #92400E;
+      background: #FEF3C7; border: 2px solid #D97706; border-radius: 10px;
+      padding: 10px 22px; margin-top: 6px;
+      opacity: 0; transition: opacity 0.4s ease;
+    }
+    .bt-punchline.visible { opacity: 1; }
+    .bt-warning {
+      font-size: 0.75em; color: #1E3A8A;
+      background: #EFF6FF; border: 1.5px solid #93C5FD; border-radius: 8px;
+      padding: 8px 18px; margin-top: 10px; line-height: 1.55; text-align: center;
+      opacity: 0; transition: opacity 0.4s ease;
+    }
+    .bt-warning.visible { opacity: 1; }
+    /* ── Brise-glace grille 2x2 ── */
+    .bt-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+      margin: 16px 0; width: 100%; max-width: 680px;
+    }
+    .bt-card {
+      background: #F8FAFC; border: 2px solid #E2E8F0; border-radius: 14px;
+      padding: 22px 16px; text-align: center;
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      opacity: 0; transform: scale(0.88);
+      transition: opacity 0.35s ease, transform 0.35s ease, background 0.3s, border-color 0.3s;
+    }
+    .bt-card.visible { opacity: 1; transform: none; background: #EFF6FF; border-color: #93C5FD; }
+    .bt-card-icon  { font-size: 2.6em; line-height: 1; }
+    .bt-card-label { font-size: 1.0em; font-weight: 700; color: #1E293B; }
+    .bt-card-sub   { font-size: 0.72em; color: #475569; }
+    /* ── Définition Tech Debt ── */
+    .dt-def-grid {
+      display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin: 12px 0;
+    }
+    .dt-def-card {
+      border-radius: 12px; padding: 10px 8px; text-align: center;
+      background: #F8FAFC; border: 2px solid #E2E8F0;
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+    }
+    .dt-def-icon  { font-size: 1.7em; line-height: 1; }
+    .dt-def-label { font-size: 0.76em; font-weight: 700; color: #1E293B; }
+    .dt-def-quote { font-size: 0.63em; color: #64748B; font-style: italic; line-height: 1.3; }
+    .dt-def-cost {
+      display: flex; align-items: center; gap: 10px;
+      background: #FEF2F2; border: 2px solid #EF4444; border-radius: 8px;
+      padding: 10px 18px; margin-top: 10px;
+      font-size: 0.88em; font-weight: 600; color: #7F1D1D;
+      opacity: 0; transform: translateY(8px);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+    .dt-def-cost.visible { opacity: 1; transform: none; }
+    /* ── Stat bars ── */
+    .dt-stats { display: flex; flex-direction: column; gap: 18px; margin-top: 14px; }
+    .dt-stat-item { display: flex; flex-direction: column; gap: 5px; }
+    .dt-stat-label { font-size: 0.85em; font-weight: 600; color: #1E293B; }
+    .dt-stat-row { display: flex; align-items: center; gap: 12px; }
+    .dt-stat-track { flex: 1; height: 28px; background: #E2E8F0; border-radius: 14px; overflow: hidden; }
+    .dt-stat-fill {
+      height: 100%; border-radius: 14px; width: 0%;
+      transition: width 1.8s cubic-bezier(.4,0,.2,1);
+    }
+    .dt-stat-val { font-size: 1.25em; font-weight: 800; color: #1E293B; min-width: 46px; text-align: right; }
+    /* ── 7 types ── */
+    .dt-types { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 10px; }
+    .dt-type-card {
+      display: flex; align-items: center; gap: 8px; background: #F8FAFC;
+      border: 1.5px solid #E2E8F0; border-radius: 10px; padding: 10px 12px;
+      font-size: 0.80em; opacity: 0;
+    }
+    .dt-type-card--wide { grid-column: 1/-1; background: #FEF2F2; border-color: #FCA5A5; }
+    .dt-type-icon { font-size: 1.5em; flex-shrink: 0; }
+    section.present .dt-type-card { animation: dtTypeIn 0.4s var(--delay,0.1s) forwards; }
+    @keyframes dtTypeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:none} }
+    /* ── Cercle vicieux ── */
+    .dt-flow { display: flex; flex-direction: column; align-items: center; gap: 5px; margin-top: 10px; }
+    .dt-flow-node {
+      width: 82%; border: 2px solid #E2E8F0; border-radius: 10px;
+      padding: 10px 20px; text-align: center; opacity: 0;
+    }
+    .dt-flow-node strong { display: block; font-size: 0.95em; }
+    .dt-flow-sub { display: block; font-size: 0.72em; color: #64748B; margin-top: 2px; }
+    .dt-flow-node--start { border-color: #F59E0B; background: #FFFBEB; }
+    .dt-flow-node--mid   { border-color: #F97316; background: #FFF7ED; }
+    .dt-flow-node--alert { border-color: #EF4444; background: #FEF2F2; }
+    .dt-flow-arrow { font-size: 1.3em; color: #94A3B8; opacity: 0; }
+    .dt-flow-back  { font-size: 0.82em; font-weight: 700; color: #D97706;
+                     font-style: italic; opacity: 0; margin-top: 4px; }
+    @keyframes dtFlowIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+    section.present #dfn1   { animation: dtFlowIn .3s 0.20s forwards; }
+    section.present #dfa1   { animation: dtFlowIn .3s 0.50s forwards; }
+    section.present #dfn2   { animation: dtFlowIn .3s 0.80s forwards; }
+    section.present #dfa2   { animation: dtFlowIn .3s 1.10s forwards; }
+    section.present #dfn3   { animation: dtFlowIn .3s 1.40s forwards; }
+    section.present #dfa3   { animation: dtFlowIn .3s 1.70s forwards; }
+    section.present #dfn4   { animation: dtFlowIn .3s 2.00s forwards; }
+    section.present #dfback { animation: dtFlowIn .3s 2.30s forwards; }
+    /* ── 4 Profils ── */
+    .dt-profiles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+    .dt-profile {
+      display: flex; align-items: flex-start; gap: 12px; background: #F8FAFC;
+      border: 2px solid #E2E8F0; border-radius: 12px; padding: 12px 16px;
+      opacity: 0; transform: translateX(-12px);
+      transition: opacity 0.4s ease, transform 0.4s ease, background 0.3s, border-color 0.3s;
+    }
+    .dt-profile.visible { opacity: 1; transform: none; }
+    .dt-profile-icon { font-size: 1.8em; flex-shrink: 0; }
+    .dt-profile-name { font-size: 0.85em; font-weight: 700; color: #1E293B; margin-bottom: 4px; }
+    .dt-profile-arg  { font-size: 0.75em; color: #475569; font-style: italic; line-height: 1.4; }
+    .dt-profile--dev.visible    { border-color: #93C5FD; background: #EFF6FF; }
+    .dt-profile--po.visible     { border-color: #C4B5FD; background: #F5F3FF; }
+    .dt-profile--mgmt.visible   { border-color: #FCD34D; background: #FFFBEB; }
+    .dt-profile--client.visible { border-color: #86EFAC; background: #F0FDF4; }
+    /* ── Matrice Impact×Coût ── */
+    .dt-matrice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
+    .dt-quad {
+      border-radius: 10px; padding: 12px 16px; opacity: 0; transform: scale(0.95);
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+    .dt-quad.visible { opacity: 1; transform: none; }
+    .dt-quad-label { font-size: 0.82em; font-weight: 800; margin-bottom: 6px; }
+    .dt-quad-desc  { font-size: 0.75em; color: #374151; line-height: 1.45; }
+    .dt-quad-desc em { font-weight: 700; display: block; margin-bottom: 6px; }
+    .dt-quad--do    { background: #DCFCE7; border: 2px solid #16A34A; }
+    .dt-quad--do    .dt-quad-label { color: #14532D; }
+    .dt-quad--plan  { background: #DBEAFE; border: 2px solid #1D4ED8; }
+    .dt-quad--plan  .dt-quad-label { color: #1E3A8A; }
+    .dt-quad--quick { background: #FEF3C7; border: 2px solid #D97706; }
+    .dt-quad--quick .dt-quad-label { color: #92400E; }
+    .dt-quad--skip  { background: #F1F5F9; border: 2px solid #CBD5E1; }
+    .dt-quad--skip  .dt-quad-label { color: #475569; }
+    /* ── Ordre de suppression ── */
+    .dt-order { display: flex; flex-direction: column; align-items: center; gap: 5px; margin-top: 8px; }
+    .dt-order-step {
+      display: flex; align-items: center; gap: 14px; background: #F8FAFC;
+      border: 1.5px solid #E2E8F0; border-radius: 10px; padding: 8px 16px; width: 88%;
+      opacity: 0; transform: translateY(8px);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .dt-order-step.visible { opacity: 1; transform: none; }
+    .dt-order-num {
+      width: 30px; height: 30px; border-radius: 50%; background: #1D4ED8;
+      color: white; display: flex; align-items: center; justify-content: center;
+      font-size: 0.95em; font-weight: 700; flex-shrink: 0;
+    }
+    .dt-order-content { flex: 1; }
+    .dt-order-content strong { display: block; font-size: 0.88em; color: #1E293B; }
+    .dt-order-content span   { font-size: 0.70em; color: #64748B; }
+    .dt-order-why {
+      font-size: 0.70em; color: #D97706; font-style: italic;
+      flex-shrink: 0; max-width: 100px; text-align: right;
+    }
+    .dt-order-arrow {
+      font-size: 1.2em; color: #94A3B8; opacity: 0; transition: opacity 0.2s ease;
+    }
+    .dt-order-arrow.visible { opacity: 1; }
+    /* ── 2 Approches ── */
+    .dt-approaches { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; }
+    .dt-approach { border-radius: 14px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.07); }
+    .dt-approach.fragment { opacity: 0; transform: translateY(14px); transition: opacity 0.4s ease, transform 0.4s ease; }
+    .dt-approach.visible  { opacity: 1; transform: none; }
+    .dt-approach-hdr { padding: 12px 16px; display: flex; align-items: center; gap: 12px; }
+    .dt-approach-hdr.crisis     { background: #FEE2E2; color: #DC2626; }
+    .dt-approach-hdr.continuous { background: #DCFCE7; color: #16A34A; }
+    .dt-approach-icon { font-size: 1.9em; flex-shrink: 0; line-height: 1; }
+    .dt-approach-name { font-size: 0.84em; font-weight: 700; line-height: 1.3; }
+    .dt-approach-ctx  { font-size: 0.66em; font-weight: 400; opacity: 0.75; font-style: italic; margin-top: 2px; }
+    .dt-recommended-badge {
+      display: inline-block; font-size: 0.62em; background: #16A34A; color: white;
+      padding: 1px 7px; border-radius: 4px; vertical-align: middle; margin-left: 6px; font-style: normal;
+    }
+    .dt-approach-body {
+      background: #F8FAFC; border: 1px solid #E2E8F0;
+      border-top: none; padding: 12px 16px;
+    }
+    .dt-approach-body ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 5px; }
+    .dt-approach-body li { font-size: 0.76em; padding: 2px 0; color: #1E293B; display: flex; align-items: baseline; gap: 6px; }
+    .dt-item-check { flex-shrink: 0; }
+    .dt-item-detail { font-size: 0.85em; color: #94A3B8; }
+    .dt-approach-footer { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+    .dt-tag { font-size: 0.66em; font-weight: 700; padding: 3px 9px; border-radius: 5px; }
+    .dt-tag--ok { background: #DCFCE7; color: #14532D; }
+    .dt-tag--ko { background: #FEE2E2; color: #991B1B; }
+    .dt-recommend {
+      font-size: 0.78em; color: #1E293B; text-align: center; margin-top: 12px;
+      padding: 10px 18px; background: #0F172A; color: #E2E8F0; border-radius: 10px;
+    }
+    /* ── Boy Scout slide ── */
+    .dt-scout-quote {
+      background: #F0FDF4; border-left: 4px solid #16A34A; border-radius: 0 10px 10px 0;
+      padding: 10px 16px; margin-bottom: 16px; font-style: italic; font-size: 0.90em; color: #14532D;
+    }
+    .dt-scout-cite { font-size: 0.72em; font-style: normal; color: #64748B; display: block; margin-top: 4px; }
+    .dt-scout-steps { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+    .dt-scout-step {
+      border-radius: 12px; padding: 14px 12px; text-align: center;
+      opacity: 0; transform: translateY(10px);
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+    .dt-scout-step.visible { opacity: 1; transform: none; }
+    .dt-scout-step--doc    { background: #EFF6FF; border: 2px solid #93C5FD; }
+    .dt-scout-step--remove { background: #FEF2F2; border: 2px solid #FCA5A5; }
+    .dt-scout-step--fix    { background: #F0FDF4; border: 2px solid #86EFAC; }
+    .dt-scout-num  { font-size: 0.58em; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.55; margin-bottom: 6px; }
+    .dt-scout-icon { font-size: 1.9em; margin-bottom: 6px; line-height: 1; }
+    .dt-scout-label { font-size: 0.78em; font-weight: 700; color: #1E293B; margin-bottom: 5px; }
+    .dt-scout-desc  { font-size: 0.64em; color: #64748B; line-height: 1.45; }
+    .dt-scout-why  { display: flex; gap: 8px; justify-content: center; margin-bottom: 12px; flex-wrap: wrap; }
+    .dt-scout-pill {
+      font-size: 0.72em; font-weight: 600; padding: 5px 13px; border-radius: 20px;
+      background: #F5F3FF; color: #4C1D95; border: 1.5px solid #DDD6FE;
+      opacity: 0; transform: translateY(6px); transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .dt-scout-pill.visible { opacity: 1; transform: none; }
+    .dt-scout-tip {
+      background: #0F172A; border-radius: 10px; padding: 10px 20px;
+      font-size: 0.78em; color: #CBD5E1; text-align: center; line-height: 1.6;
+    }
+    .dt-scout-tip strong { color: #A78BFA; }
+
+    /* ── Roadmap ── */
+    .dt-roadmap { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+    .dt-phase {
+      border-radius: 10px; overflow: hidden; opacity: 0; transform: translateY(10px);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+    .dt-phase.visible { opacity: 1; transform: none; }
+    .dt-phase-hdr { padding: 8px 14px; font-size: 0.82em; font-weight: 700; }
+    .dt-phase-hdr.ph1 { background: #DBEAFE; color: #1E3A8A; }
+    .dt-phase-hdr.ph2 { background: #FEF3C7; color: #92400E; }
+    .dt-phase-hdr.ph3 { background: #DCFCE7; color: #14532D; }
+    .dt-phase-hdr.ph4 { background: #EDE9FE; color: #4C1D95; }
+    .dt-phase-body {
+      background: #F8FAFC; border: 1px solid #E2E8F0;
+      border-top: none; padding: 10px 14px; font-size: 0.75em; color: #1E293B;
+    }
+    .dt-phase-body ul { list-style: none; padding: 0; margin: 0 0 6px; }
+    .dt-phase-body li { padding: 2px 0; }
+    /* ── 5 messages à retenir ── */
+    .dt-takeaways { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+    .dt-takeaway {
+      display: flex; align-items: flex-start; gap: 12px; padding: 10px 16px;
+      border-radius: 8px; opacity: 0; transform: translateX(-14px);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+    .dt-takeaway.visible { opacity: 1; transform: none; }
+    .dt-takeaway-num  { font-size: 1.3em; font-weight: 800; flex-shrink: 0; line-height: 1.2; }
+    .dt-takeaway-text { font-size: 0.88em; line-height: 1.45; }
+    .dt-takeaway:nth-child(1) { background: #EFF6FF; border-left: 4px solid #1D4ED8; color: #1E3A8A; }
+    .dt-takeaway:nth-child(2) { background: #FEF3C7; border-left: 4px solid #D97706; color: #92400E; }
+    .dt-takeaway:nth-child(3) { background: #F0FDF4; border-left: 4px solid #16A34A; color: #14532D; }
+    .dt-takeaway:nth-child(4) { background: #F5F3FF; border-left: 4px solid #7C3AED; color: #4C1D95; }
+    .dt-takeaway:nth-child(5) { background: #FFF1F2; border-left: 4px solid #EF4444; color: #7F1D1D; }
+    /* ── Slide finale ── */
+    .dt-fin {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; height: 100%; gap: 14px; text-align: center;
+    }
+    .dt-fin-steps { display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 580px; }
+    .dt-fin-step {
+      display: flex; align-items: center; gap: 16px; background: #F8FAFC;
+      border: 1.5px solid #E2E8F0; border-radius: 10px; padding: 10px 20px;
+    }
+    .dt-fin-num {
+      width: 28px; height: 28px; border-radius: 50%; background: #D97706;
+      color: white; display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 1.0em; flex-shrink: 0;
+    }
+    .dt-fin-action { flex: 1; font-size: 0.92em; font-weight: 600; color: #1E293B; text-align: left; }
+    .dt-fin-time   { font-size: 0.75em; color: #64748B; font-weight: 600; flex-shrink: 0; }
+    .dt-fin-result {
+      background: #FEF3C7; border: 2px solid #D97706; border-radius: 10px;
+      padding: 10px 24px; font-size: 0.95em; color: #92400E;
+    }
+    .dt-fin-resources { font-size: 0.68em; color: #64748B; }
+    .dt-fin-question  { font-size: 1.4em; font-weight: 700; color: #1D4ED8; margin-top: 6px; }
+    /* ── PPTX Cover — pixel-perfect reproduction du slide London's Calling ── */
+    .pptx-cover { padding: 0 !important; overflow: hidden !important; height: 720px !important; }
+    .pc-wrap { position: absolute; inset: 0; background: white; overflow: hidden; }
+    .pc-wrap img { position: absolute; }
+    .pc-logo     { left: 35px;  top: 20px;  width: 227px; height: 189px; object-fit: contain; }
+    .pc-sponsors { left: 578px; top: 43px;  width: 676px; height: 166px; object-fit: contain; }
+    .pc-skyline  { left: 593px; top: 436px; width: 687px; height: 284px; object-fit: cover; }
+    .pc-title {
+      position: absolute; left: 38px; top: 282px; width: 1145px; height: 127px;
+      display: flex; align-items: flex-end; padding-bottom: 4px;
+      color: #89050F; font-size: 72px; font-weight: 700; line-height: 1.05;
+      font-family: 'Calibri Light','Calibri',Arial,sans-serif; letter-spacing: -0.5px;
+    }
+    .pc-divider  { position: absolute; left: 37px;  top: 429px; width: 1216px; height: 1.5px; background: #7C868D; }
+    .pc-hashtag  {
+      position: absolute; left: 975px; top: 434px; width: 287px; height: 45px;
+      display: flex; align-items: center; justify-content: flex-end;
+      color: #800000; font-size: 21px; font-family: 'Calibri',Arial,sans-serif;
+    }
+    .pc-speaker  {
+      position: absolute; left: 36px; top: 516px; width: 496px;
+      color: #800000; font-size: 20px; line-height: 1.65; font-family: 'Calibri',Arial,sans-serif;
+      display: flex; flex-direction: column;
+    }
+    .pc-speaker strong { font-size: 22px; }
+    /* ── London's Calling — background basique (hors slides pleine-page) ── */
+    .reveal .slides section:not(.lc-title):not(.pptx-cover) { background: white; }
+    /* ── Masthead injecté par JS : fine barre rouge + logo LC26 top-right ── */
+    .slide-masthead {
+      position: absolute; top: 0; left: 0; right: 0; height: 90px;
+      z-index: 10; pointer-events: none; background: transparent;
+    }
+    .slide-masthead-bar {
+      position: absolute; top: 0; left: 0; right: 0; height: 10px;
+      background: #891019;
+    }
+    .slide-masthead-logo {
+      position: absolute; top: 0; right: 2%;
+      height: 90px; width: auto; background: white;
+    }
+    /* ── London's Calling — slides titre / Q&A / Thank You ── */
+    .lc-title { padding: 0 !important; overflow: hidden !important; height: 720px !important; }
+    .lc-tw { position: absolute; inset: 0; background: white; overflow: hidden; }
+    .lc-tw img { position: absolute; }
+    .lc-tw-logo     { left: 2.5%; top: 2.5%; width: 18%; }
+    .lc-tw-sponsors { left: 46%; top: 3%; width: 53%; }
+    .lc-tw-skyline  { left: 46%; top: 53%; width: 54%; }
+    .lc-tw-title {
+      position: absolute; left: 3%; top: 39%;
+      color: #891019; font-size: 3.5em; font-weight: 400; line-height: 1.15;
+    }
+    .lc-tw-subtitle { font-size: 0.42em; display: block; font-weight: 400; color: #891019; opacity: 0.85; }
+    .lc-tw-divider {
+      position: absolute; left: 3%; right: 3%; top: 57%;
+      height: 1px; background: #7C868D;
+    }
+    .lc-tw-hashtag {
+      position: absolute; right: 3%; top: 57.5%;
+      color: #800000; font-size: 0.55em; font-style: normal;
+    }
+    .lc-tw-speaker {
+      position: absolute; left: 3%; top: 62%;
+      color: #891019; font-size: 0.82em; line-height: 1.7;
+    }
+    .lc-tw-speaker strong { display: block; }
+
+    /* ── Cercle vicieux 2x2 ── */
+    .dt-cycle-wrap {
+      display: grid;
+      grid-template-columns: 1fr 42px 1fr;
+      grid-template-rows: 1fr 48px 1fr;
+      gap: 6px; margin-top: 10px;
+      max-width: 680px; margin-left: auto; margin-right: auto;
+    }
+    .dt-cycle-box {
+      border-radius: 12px; padding: 10px 12px; text-align: center;
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      opacity: 0;
+    }
+    .dt-cycle-icon { font-size: 1.2em; }
+    .dt-cycle-box strong { display: block; font-size: 0.88em; color: #1E293B; }
+    .dt-cycle-sub { font-size: 0.67em; color: #64748B; line-height: 1.3; }
+    .dt-cycle--start { background: #FFFBEB; border: 2px solid #F59E0B; }
+    .dt-cycle--mid   { background: #FFF7ED; border: 2px solid #F97316; }
+    .dt-cycle--alert { background: #FEF2F2; border: 2px solid #EF4444; }
+    .dt-cycle--fix   { background: #FFFBEB; border: 2px solid #D97706; }
+    .dt-cycle-arr {
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5em; color: #94A3B8; opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .dt-cycle-arr.visible { opacity: 1; }
+    .dt-cycle-center {
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.80em; color: #D97706; font-weight: 700; font-style: italic;
+      text-align: center; opacity: 0;
+    }
+    @keyframes dtCycleIn { from{opacity:0;transform:scale(0.88)} to{opacity:1;transform:none} }
+    .dt-cycle-box.visible    { animation: dtCycleIn 0.35s forwards; }
+    .dt-cycle-center.visible { animation: dtCycleIn 0.35s forwards; }
+
+    /* ── Profils détail ── */
+    .dt-prof-slide { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
+    .dt-prof-hook {
+      border-left: 5px solid #1D4ED8; padding: 7px 14px;
+      font-size: 0.90em; font-style: italic; font-weight: 600;
+      color: #1E3A8A; border-radius: 0 8px 8px 0; background: #EFF6FF;
+    }
+    .dt-prof-hook--po    { border-color: #7C3AED; color: #4C1D95; background: #F5F3FF; }
+    .dt-prof-hook--mgmt  { border-color: #D97706; color: #92400E; background: #FFFBEB; }
+    .dt-prof-hook--client{ border-color: #16A34A; color: #14532D; background: #F0FDF4; }
+    .dt-prof-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .dt-prof-col-title {
+      font-size: 0.65em; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; color: #94A3B8; margin-bottom: 5px;
+    }
+    .dt-prof-impacts { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 3px; }
+    .dt-prof-impacts li {
+      font-size: 0.76em; padding: 4px 9px; border-radius: 6px;
+      background: #F8FAFC; border-left: 2px solid #E2E8F0; color: #374151;
+    }
+    .dt-lang-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+    .dt-lang-tag {
+      display: inline-block; background: #1E40AF; color: white;
+      border-radius: 4px; padding: 3px 9px; font-size: 0.70em; font-weight: 600;
+    }
+    .dt-lang-tag--po    { background: #6D28D9; }
+    .dt-lang-tag--mgmt  { background: #92400E; }
+    .dt-lang-tag--client{ background: #065F46; }
+    .dt-prof-bias {
+      background: #FEF3C7; border: 1px solid #D97706; border-radius: 8px;
+      padding: 8px 14px; display: flex; align-items: flex-start; gap: 10px;
+    }
+    .dt-prof-bias--po    { background: #F5F3FF; border-color: #7C3AED; }
+    .dt-prof-bias--mgmt  { background: #FFFBEB; border-color: #D97706; }
+    .dt-prof-bias--client{ background: #F0FDF4; border-color: #16A34A; }
+
+    /* ── Profile slides v2 — impact icon cards ── */
+    .dt-prof2 { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
+    .dt-prof2-impacts { display: grid; grid-template-columns: repeat(5,1fr); gap: 8px; }
+    .dt-prof2-card {
+      border-radius: 10px; padding: 12px 6px; text-align: center;
+      display: flex; flex-direction: column; align-items: center; gap: 5px;
+    }
+    .dt-prof2-card--dev    { background: #EFF6FF; border: 1.5px solid #93C5FD; }
+    .dt-prof2-card--po     { background: #F5F3FF; border: 1.5px solid #C4B5FD; }
+    .dt-prof2-card--mgmt   { background: #FFFBEB; border: 1.5px solid #FCD34D; }
+    .dt-prof2-card--client { background: #F0FDF4; border: 1.5px solid #86EFAC; }
+    .dt-prof2-icon { font-size: 1.7em; line-height: 1; }
+    .dt-prof2-text { font-size: 0.67em; color: #374151; line-height: 1.3; font-weight: 500; }
+    .dt-prof2-lang {
+      display: flex; flex-wrap: wrap; gap: 5px; align-items: center;
+      padding: 8px 12px; background: #F8FAFC; border-radius: 8px; border: 1px solid #E2E8F0;
+    }
+    .dt-prof2-lang-label {
+      font-size: 0.60em; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.09em; color: #94A3B8; margin-right: 4px; white-space: nowrap;
+    }
+    .dt-prof2-card.fragment  { transform: translateY(10px); transition: opacity 0.3s ease, transform 0.3s ease; }
+    .dt-prof2-card.visible   { transform: none; }
+    .dt-prof2-lang.fragment  { transform: translateY(6px); transition: opacity 0.4s ease, transform 0.4s ease; }
+    .dt-prof2-lang.visible   { transform: none; }
+    .dt-prof-bias.fragment   { transform: translateY(6px); transition: opacity 0.4s ease, transform 0.4s ease; }
+    .dt-prof-bias.visible    { transform: none; }
+    .dt-bias-icon { font-size: 1.2em; flex-shrink: 0; padding-top: 1px; }
+    .dt-bias-body { display: flex; flex-direction: column; gap: 1px; }
+    .dt-bias-label { font-size: 0.68em; color: #92400E; font-weight: 700; }
+    .dt-bias-label--po    { color: #4C1D95; }
+    .dt-bias-label--mgmt  { color: #92400E; }
+    .dt-bias-label--client{ color: #14532D; }
+    .dt-bias-quote { font-size: 0.80em; font-style: italic; color: #1E293B; line-height: 1.45; }
+
+    /* ── Conclusion 4 profils ── */
+    .dt-concl-wrap { display: flex; flex-direction: column; align-items: center; gap: 14px; margin-top: 12px; }
+    .dt-concl-mini-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; width: 100%; }
+    .dt-concl-mini {
+      border-radius: 10px; padding: 12px 8px; text-align: center;
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      opacity: 0; transform: translateY(10px);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+    .dt-concl-mini.visible { opacity: 1; transform: none; }
+    .dt-concl-mini-icon { font-size: 1.7em; }
+    .dt-concl-mini-name { font-size: 0.72em; font-weight: 700; color: #1E293B; }
+    .dt-concl-mini-verb { font-size: 0.70em; color: #475569; }
+    .dt-concl-mini--dev   { background: #EFF6FF; border: 2px solid #93C5FD; }
+    .dt-concl-mini--po    { background: #F5F3FF; border: 2px solid #C4B5FD; }
+    .dt-concl-mini--mgmt  { background: #FFFBEB; border: 2px solid #FCD34D; }
+    .dt-concl-mini--client{ background: #F0FDF4; border: 2px solid #86EFAC; }
+    .dt-concl-quote {
+      background: #1E293B; color: #F8FAFC; border-radius: 12px;
+      padding: 14px 22px; font-size: 0.86em; text-align: center; line-height: 1.65;
+      opacity: 0; transition: opacity 0.5s ease; width: 100%;
+    }
+    .dt-concl-quote.visible { opacity: 1; }
+    .dt-concl-quote em { color: #FCD34D; font-style: normal; font-weight: 700; }
+
+    /* ── Slide 14 — Allies vs Enemy ── */
+    .dt-ally-section { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 10px; }
+    .dt-ally-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; width: 100%; }
+    .dt-ally-card {
+      border-radius: 12px; padding: 14px 8px; text-align: center;
+      display: flex; flex-direction: column; align-items: center; gap: 5px;
+      position: relative;
+    }
+    .dt-ally-card--dev    { background: #EFF6FF; border: 2px solid #93C5FD; }
+    .dt-ally-card--po     { background: #F5F3FF; border: 2px solid #C4B5FD; }
+    .dt-ally-card--mgmt   { background: #FFFBEB; border: 2px solid #FCD34D; }
+    .dt-ally-card--client { background: #F0FDF4; border: 2px solid #86EFAC; }
+    .dt-ally-badge {
+      position: absolute; top: -9px; right: -9px;
+      background: #16A34A; color: white; border-radius: 50%;
+      width: 22px; height: 22px; display: flex; align-items: center; justify-content: center;
+      font-size: 0.68em; font-weight: 700; box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+    }
+    .dt-ally-icon { font-size: 1.9em; line-height: 1; }
+    .dt-ally-name { font-size: 0.78em; font-weight: 700; color: #1E293B; }
+    .dt-ally-role { font-size: 0.64em; color: #64748B; }
+    .dt-ally-arrows {
+      font-size: 1.1em; color: #94A3B8; letter-spacing: 48px;
+      padding-left: 48px; width: 100%; text-align: center;
+    }
+    .dt-enemy-card {
+      background: #1E293B; border: 2px solid #EF4444; border-radius: 14px;
+      padding: 18px 24px; text-align: center; width: 100%;
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+    }
+    .dt-enemy-label {
+      font-size: 0.62em; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.16em; color: #EF4444;
+    }
+    .dt-enemy-icon  { font-size: 2.6em; line-height: 1; }
+    .dt-enemy-title { font-size: 1.15em; font-weight: 700; color: white; }
+    .dt-enemy-tags  { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 4px; }
+    .dt-enemy-tag   {
+      font-size: 0.65em; padding: 2px 10px; border-radius: 4px;
+      background: rgba(239,68,68,0.15); color: #FCA5A5; font-weight: 600;
+    }
+    .dt-ally-conclusion {
+      background: #F0FDF4; border: 2px solid #16A34A; border-radius: 10px;
+      padding: 10px 22px; font-size: 0.88em; font-weight: 600;
+      color: #14532D; text-align: center; width: 100%;
+    }
+    /* Fragment transitions pour ally section */
+    .dt-ally-grid.fragment, .dt-ally-arrows.fragment,
+    .dt-enemy-card.fragment, .dt-ally-conclusion.fragment {
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+    .dt-ally-grid.fragment, .dt-ally-arrows.fragment, .dt-ally-conclusion.fragment {
+      transform: translateY(8px);
+    }
+    .dt-enemy-card.fragment { transform: scale(0.94); }
+    .dt-ally-grid.visible, .dt-ally-arrows.visible,
+    .dt-enemy-card.visible, .dt-ally-conclusion.visible {
+      transform: none;
+    }
+    /* ── AI Argument popup trigger ── */
+    .dt-ai-trigger {
+      display: block; margin: 0 auto;
+      background: #7C3AED; color: white; border: none; border-radius: 10px;
+      padding: 10px 24px; font-size: 0.88em; font-weight: 700; cursor: pointer;
+      box-shadow: 0 4px 14px rgba(124,58,237,0.35);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .dt-ai-trigger:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(124,58,237,0.45); }
+    /* ── AI Argument popup ── */
+    #popup-ai {
+      display: none; opacity: 0; position: fixed;
+      top: 50%; left: 50%; transform: translate(-50%,-50%);
+      background: white; border: 2px solid #7C3AED; border-radius: 16px;
+      max-width: 947px; width: 96%; z-index: 3000; overflow: hidden; font-size: 1.3em;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.30);
+      transition: opacity 0.25s ease; flex-direction: column;
+    }
+    .ai-popup-header {
+      background: #7C3AED; padding: 12px 18px;
+      display: flex; align-items: center; gap: 10px; color: white;
+    }
+    .ai-popup-title { font-size: 0.88em; font-weight: 700; flex: 1; }
+    .ai-popup-close { background: none; border: none; color: white; cursor: pointer; font-size: 1.1em; opacity: 0.75; }
+    .ai-popup-close:hover { opacity: 1; }
+    .ai-popup-selector { padding: 12px 16px; border-bottom: 1px solid #E2E8F0; }
+    .ai-popup-selector-label { font-size: 0.60em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em; color: #94A3B8; margin-bottom: 8px; }
+    .ai-popup-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+    .ai-arg-btn {
+      padding: 5px 12px; border-radius: 6px; font-size: 0.78em; font-weight: 600;
+      cursor: pointer; border: 2px solid #E2E8F0; background: #F8FAFC; color: #1E293B;
+      transition: all 0.15s;
+    }
+    .ai-arg-btn:hover, .ai-arg-btn.active { background: #7C3AED; color: white; border-color: #7C3AED; }
+    .ai-popup-response {
+      padding: 14px 18px; min-height: 120px; font-size: 0.80em;
+      line-height: 1.65; color: #1E293B; transition: opacity 0.2s ease;
+      max-height: 442px; overflow-y: auto;
+    }
+    .ai-popup-footer {
+      padding: 7px 16px; background: #F5F3FF; border-top: 1px solid #E2E8F0;
+      font-size: 0.58em; color: #94A3B8; font-style: italic;
+    }
+    @keyframes aiCursor { 0%,100%{opacity:1} 50%{opacity:0} }
+    .ai-cursor::after { content:'▋'; animation: aiCursor 0.6s step-end infinite; }
+    /* ── AI Management response cards ── */
+    .ai-mgmt-response { display: flex; flex-direction: column; gap: 10px; }
+    .ai-mgmt-tagline { font-size: 0.80em; font-weight: 600; color: #1E293B; border-left: 3px solid #7C3AED; padding-left: 10px; line-height: 1.4; }
+    .ai-mgmt-cards { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+    .ai-mgmt-stat { background: #F5F3FF; border-radius: 8px; padding: 10px 8px; text-align: center; border: 1px solid #E9D5FF; }
+    .ai-mgmt-stat-val { font-size: 1.4em; font-weight: 800; color: #7C3AED; }
+    .ai-mgmt-stat-label { font-size: 0.58em; color: #64748B; margin-top: 3px; line-height: 1.35; }
+    .ai-mgmt-risk { background: #FFF1F2; border: 1px solid #FDA4AF; border-radius: 8px; padding: 9px 12px; font-size: 0.73em; color: #881337; line-height: 1.55; }
+    .ai-mgmt-close { font-size: 0.76em; color: #475569; text-align: center; padding: 6px 0 2px; }
+
+    /* ── Agentforce slide ── */
+    .dt-agent-hook {
+      font-size: 0.80em; font-style: italic; color: #4C1D95;
+      border-left: 3px solid #7C3AED; padding: 7px 14px;
+      margin-bottom: 12px; background: #F5F3FF; border-radius: 0 8px 8px 0;
+    }
+    .dt-agent-blockers { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+    .dt-agent-row {
+      display: grid; grid-template-columns: 1fr 32px 1fr;
+      align-items: stretch;
+    }
+    .dt-agent-debt {
+      background: #FEF2F2; border: 1px solid #FECACA; border-radius: 8px 0 0 8px;
+      padding: 8px 12px; font-size: 0.74em; font-weight: 600; color: #991B1B;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .dt-agent-icon { font-size: 1.15em; flex-shrink: 0; }
+    .dt-agent-sep {
+      background: #E2E8F0; display: flex; align-items: center; justify-content: center;
+      font-size: 0.85em; color: #64748B; font-weight: 700;
+    }
+    .dt-agent-impact {
+      background: #F5F3FF; border: 1px solid #DDD6FE; border-radius: 0 8px 8px 0;
+      padding: 8px 12px; font-size: 0.74em; color: #4C1D95; display: flex; align-items: center;
+    }
+    .dt-agent-pitch {
+      background: #0F172A; border-radius: 10px; padding: 12px 20px;
+      font-size: 0.80em; color: #E2E8F0; line-height: 1.6; text-align: center;
+    }
+    .dt-agent-pitch strong { color: #A78BFA; }
+    @keyframes dtAgentRowIn { from { opacity:0; transform:translateX(-10px); } to { opacity:1; transform:none; } }
+    section.present .dt-agent-row   { opacity:0; animation: dtAgentRowIn 0.32s ease forwards; }
+    section.present .dt-agent-row:nth-child(1) { animation-delay: 0.08s; }
+    section.present .dt-agent-row:nth-child(2) { animation-delay: 0.18s; }
+    section.present .dt-agent-row:nth-child(3) { animation-delay: 0.28s; }
+    section.present .dt-agent-row:nth-child(4) { animation-delay: 0.38s; }
+    section.present .dt-agent-row:nth-child(5) { animation-delay: 0.48s; }
+    section.present .dt-agent-pitch { opacity:0; animation: dtAgentRowIn 0.32s ease forwards; animation-delay: 0.62s; }
+
+    /* ── 5 façons de prioriser ── */
+    .dt-prio-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+    .dt-prio-card {
+      border-radius: 12px; padding: 12px 14px;
+      display: flex; flex-direction: column; gap: 4px;
+      opacity: 0; transform: translateY(10px);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+    .dt-prio-card.visible { opacity: 1; transform: none; }
+    .dt-prio-header { display: flex; align-items: center; gap: 8px; margin-bottom: 2px; }
+    .dt-prio-icon  { font-size: 1.3em; flex-shrink: 0; }
+    .dt-prio-title { font-size: 0.88em; font-weight: 700; color: #1E293B; }
+    .dt-prio-principle { font-size: 0.72em; color: #475569; font-style: italic; }
+    .dt-prio-examples  { font-size: 0.70em; color: #374151; line-height: 1.5; }
+    .dt-prio-tag {
+      display: inline-block; font-size: 0.64em; font-weight: 700;
+      padding: 2px 8px; border-radius: 4px; margin-top: 4px; align-self: flex-start;
+    }
+    .dt-prio--tech  { background: #EFF6FF; border: 2px solid #1D4ED8; }
+    .dt-prio--tech  .dt-prio-tag { background: #1D4ED8; color: white; }
+    .dt-prio--risk  { background: #FEF2F2; border: 2px solid #EF4444; }
+    .dt-prio--risk  .dt-prio-tag { background: #EF4444; color: white; }
+    .dt-prio--roi   { background: #F0FDF4; border: 2px solid #16A34A; }
+    .dt-prio--roi   .dt-prio-tag { background: #16A34A; color: white; }
+    .dt-prio--strat { background: #FFF7ED; border: 2px solid #F97316; }
+    .dt-prio--strat .dt-prio-tag { background: #F97316; color: white; }
+
+    /* ── 5 façons overview ── */
+    .dt-prio5-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 8px; margin-top: 16px; }
+    .dt-prio5-card {
+      border-radius: 10px; padding: 12px 8px; text-align: center;
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      opacity: 0; transform: translateY(10px);
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+    .dt-prio5-card.visible { opacity: 1; transform: none; }
+    .dt-prio5-icon  { font-size: 1.7em; }
+    .dt-prio5-title { font-size: 0.76em; font-weight: 700; color: #1E293B; }
+    .dt-prio5-desc  { font-size: 0.64em; color: #475569; font-style: italic; line-height: 1.4; }
+    .dt-prio5--tech   { background: #EFF6FF; border: 2px solid #1D4ED8; }
+    .dt-prio5--risk   { background: #FEF2F2; border: 2px solid #EF4444; }
+    .dt-prio5--roi    { background: #F0FDF4; border: 2px solid #16A34A; }
+    .dt-prio5--strat  { background: #FFF7ED; border: 2px solid #F97316; }
+    .dt-prio5--domino { background: #F5F3FF; border: 2px solid #7C3AED; }
+
+    /* ── Approche hook ── */
+    .dt-appr-hook {
+      border-left: 5px solid #1D4ED8; padding: 7px 14px; margin-bottom: 12px;
+      font-size: 0.90em; font-style: italic; font-weight: 600;
+      color: #1E3A8A; border-radius: 0 8px 8px 0; background: #EFF6FF;
+    }
+    .dt-appr-hook--risk   { border-color: #EF4444; color: #7F1D1D; background: #FEF2F2; }
+    .dt-appr-hook--roi    { border-color: #16A34A; color: #14532D; background: #F0FDF4; }
+    .dt-appr-hook--strat  { border-color: #F97316; color: #7C2D12; background: #FFF7ED; }
+    .dt-appr-hook--domino { border-color: #7C3AED; color: #4C1D95; background: #F5F3FF; }
+    .dt-appr-usecase {
+      font-size: 0.72em; color: #64748B; margin-top: 12px; text-align: center;
+      background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px;
+      padding: 5px 12px;
+      opacity: 0; transform: translateY(6px);
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+    .dt-appr-usecase.visible { opacity: 1; transform: none; }
+    .dt-appr-kpi {
+      margin-top: 12px; font-size: 0.72em; text-align: center;
+      padding: 6px 14px; border-radius: 6px; background: #F8FAFC; border: 1px solid #E2E8F0;
+      color: #475569; font-style: italic;
+      opacity: 0; transform: translateY(6px);
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+    .dt-appr-kpi.visible { opacity: 1; transform: none; }
+
+    /* ── Audience table (slides 20-24) ── */
+    .dt-audience { width:100%; margin-top:14px; border-collapse:collapse; font-size:0.57em; }
+    .dt-audience th { text-transform:uppercase; letter-spacing:0.06em; font-size:0.82em; color:#94a3b8; font-weight:600; padding:3px 8px; border-bottom:1px solid #E2E8F0; text-align:left; }
+    .dt-audience td { padding:4px 8px; color:#cbd5e1; border-bottom:1px solid #f8fafc; line-height:1.3; }
+    .dt-audience td:first-child { font-weight:600; white-space:nowrap; width:14%; }
+    .dt-audience tr.dt-aud-active td { color:#1e293b; background:#f8fafc; }
+    .dt-audience tr.dt-aud-active td:first-child { border-left:3px solid var(--aud-accent,#F97316); padding-left:5px; }
+
+    /* ── Dépendance chain ── */
+    .dt-dep-chain { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 22px; }
+    .dt-dep-node {
+      border-radius: 10px; padding: 14px 12px; text-align: center;
+      background: #EFF6FF; border: 2px solid #1D4ED8;
+      font-size: 0.75em; font-weight: 700; color: #1E3A8A;
+      min-width: 100px; flex-shrink: 0;
+      opacity: 0; transform: translateX(-10px);
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+    .dt-dep-node small { display: block; font-size: 0.80em; font-weight: 400; color: #475569; margin-top: 3px; }
+    .dt-dep-node.visible { opacity: 1; transform: none; }
+    .dt-dep-arr { font-size: 1.5em; color: #1D4ED8; opacity: 0; transition: opacity 0.25s ease; }
+    .dt-dep-arr.visible { opacity: 1; }
+
+    /* ── Risque list ── */
+    .dt-risk-list { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+    .dt-risk-item {
+      padding: 11px 18px; border-radius: 8px; font-size: 0.82em;
+      opacity: 0; transform: translateX(-10px);
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+    .dt-risk-item.visible { opacity: 1; transform: none; }
+    .dt-risk--crit { background: #FEF2F2; border-left: 5px solid #EF4444; color: #1E293B; }
+    .dt-risk--high { background: #FFF7ED; border-left: 5px solid #F97316; color: #1E293B; }
+    .dt-risk--med  { background: #FFFBEB; border-left: 5px solid #F59E0B; color: #1E293B; }
+
+    /* ── ROI list ── */
+    .dt-roi-list { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+    .dt-roi-item {
+      display: flex; align-items: center; gap: 12px; padding: 9px 14px;
+      background: #F0FDF4; border: 1px solid #86EFAC; border-radius: 8px;
+      opacity: 0; transform: translateX(-10px);
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+    .dt-roi-item.visible { opacity: 1; transform: none; }
+    .dt-roi-icon  { font-size: 1.2em; flex-shrink: 0; }
+    .dt-roi-label { flex: 1; font-size: 0.78em; font-weight: 600; color: #1E293B; }
+    .dt-roi-tag   { font-size: 0.64em; font-weight: 700; padding: 2px 8px; border-radius: 4px; flex-shrink: 0; }
+    .dt-roi--time  { background: #DBEAFE; color: #1E3A8A; }
+    .dt-roi--money { background: #DCFCE7; color: #14532D; }
+
+    /* ── Blocage stratégique ── */
+    .dt-block-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
+    .dt-block-item {
+      padding: 10px 14px; border-radius: 8px; font-size: 0.76em;
+      opacity: 0; transform: translateY(10px);
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+    .dt-block-item.visible { opacity: 1; transform: none; }
+    .dt-block--blocked  { background: #FEF2F2; border: 2px solid #EF4444; }
+    .dt-block--unlocked { background: #DCFCE7; border: 2px solid #16A34A; }
+    .dt-block-label { font-size: 0.68em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 4px; }
+    .dt-block--blocked  .dt-block-label { color: #7F1D1D; }
+    .dt-block--unlocked .dt-block-label { color: #14532D; }
+
+    /* ── Effet domino ── */
+    .dt-domino-wrap { display: flex; flex-direction: column; gap: 12px; margin-top: 14px; }
+    .dt-domino-row {
+      display: flex; align-items: center; gap: 10px;
+      opacity: 0; transform: translateX(-10px);
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+    .dt-domino-row.visible { opacity: 1; transform: none; }
+    .dt-domino-cause {
+      background: #4C1D95; color: white; border-radius: 8px;
+      padding: 9px 14px; font-size: 0.76em; font-weight: 700;
+      flex-shrink: 0; min-width: 160px; text-align: center;
+    }
+    .dt-domino-arr { font-size: 1.3em; color: #7C3AED; flex-shrink: 0; }
+    .dt-domino-effects { display: flex; gap: 6px; flex-wrap: wrap; }
+    .dt-domino-effect {
+      background: #F5F3FF; border: 1.5px solid #C4B5FD;
+      border-radius: 6px; padding: 5px 10px; font-size: 0.68em; color: #4C1D95; font-weight: 600;
+    }
+
+    /* ── Roadmap timeline intro ── */
+    .dt-rpm-timeline {
+      display: flex; align-items: flex-start; margin-top: 26px;
+      position: relative; padding: 0 30px;
+    }
+    .dt-rpm-timeline::before {
+      content: ''; position: absolute; top: 27px; left: 80px; right: 80px;
+      height: 3px; background: #E2E8F0; z-index: 0;
+    }
+    .dt-rpm-tphase {
+      flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px;
+      z-index: 1;
+      opacity: 0; transform: translateY(10px);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+    .dt-rpm-tphase.visible { opacity: 1; transform: none; }
+    .dt-rpm-dot {
+      width: 56px; height: 56px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3em; background: white;
+    }
+    .dt-rpm-dot--1 { box-shadow: 0 0 0 3px #1D4ED8; background: #DBEAFE; }
+    .dt-rpm-dot--2 { box-shadow: 0 0 0 3px #D97706; background: #FEF3C7; }
+    .dt-rpm-dot--3 { box-shadow: 0 0 0 3px #16A34A; background: #DCFCE7; }
+    .dt-rpm-dot--4 { box-shadow: 0 0 0 3px #7C3AED; background: #EDE9FE; }
+    .dt-rpm-tname { font-size: 0.70em; font-weight: 700; text-align: center; color: #1E293B; line-height: 1.3; }
+    .dt-rpm-ttime { font-size: 0.60em; color: #64748B; text-align: center; }
+
+    /* ── Roadmap phase detail ── */
+    .dt-rpm-progress { display: flex; align-items: center; gap: 0; margin-bottom: 10px; }
+    .dt-rpm-pdot {
+      width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.65em; font-weight: 700;
+    }
+    .dt-rpm-pdot--done   { background: #16A34A; color: white; }
+    .dt-rpm-pdot--active { background: #1D4ED8; color: white; box-shadow: 0 0 0 3px #BFDBFE; }
+    .dt-rpm-pdot--active2 { background: #D97706; color: white; box-shadow: 0 0 0 3px #FDE68A; }
+    .dt-rpm-pdot--active3 { background: #16A34A; color: white; box-shadow: 0 0 0 3px #86EFAC; }
+    .dt-rpm-pdot--active4 { background: #7C3AED; color: white; box-shadow: 0 0 0 3px #C4B5FD; }
+    .dt-rpm-pdot--next   { background: #E2E8F0; color: #94A3B8; }
+    .dt-rpm-pline { flex: 1; height: 3px; }
+    .dt-rpm-pline--done { background: #16A34A; }
+    .dt-rpm-pline--next { background: #E2E8F0; }
+    .dt-rpm-phase-wrap { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 10px; }
+    .dt-rpm-col { border-radius: 10px; overflow: hidden; }
+    .dt-rpm-col-hdr {
+      padding: 8px 12px; font-size: 0.65em; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.08em;
+    }
+    .dt-rpm-col-hdr--obj  { color: white; }
+    .dt-rpm-col-hdr--tool { background: #F1F5F9; color: #475569; border-bottom: 1px solid #E2E8F0; }
+    .dt-rpm-col-hdr--del  { color: white; }
+    .dt-rpm-ph1 .dt-rpm-col-hdr--obj { background: #1E3A8A; }
+    .dt-rpm-ph1 .dt-rpm-col-hdr--del { background: #1E3A8A; }
+    .dt-rpm-ph2 .dt-rpm-col-hdr--obj { background: #92400E; }
+    .dt-rpm-ph2 .dt-rpm-col-hdr--del { background: #92400E; }
+    .dt-rpm-ph3 .dt-rpm-col-hdr--obj { background: #14532D; }
+    .dt-rpm-ph3 .dt-rpm-col-hdr--del { background: #14532D; }
+    .dt-rpm-ph4 .dt-rpm-col-hdr--obj { background: #4C1D95; }
+    .dt-rpm-ph4 .dt-rpm-col-hdr--del { background: #4C1D95; }
+    .dt-rpm-col-body {
+      background: #F8FAFC; border: 1px solid #E2E8F0; border-top: none;
+      padding: 10px 12px; display: flex; flex-direction: column; gap: 5px;
+    }
+    .dt-rpm-tool {
+      font-size: 0.70em; padding: 4px 9px; border-radius: 5px;
+      background: white; border: 1px solid #E2E8F0; color: #1E293B;
+      opacity: 0; transform: translateX(-8px);
+    }
+    @keyframes dtRpmToolIn { from{opacity:0;transform:translateX(-8px)} to{opacity:1;transform:none} }
+    section.present .dt-rpm-tool { animation: dtRpmToolIn 0.3s var(--td,0.1s) forwards; }
+    .dt-rpm-obj { font-size: 0.76em; color: #1E293B; line-height: 1.55; }
+    .dt-rpm-del { font-size: 0.73em; font-weight: 600; line-height: 1.5; margin-bottom: 3px; }
+    .dt-rpm-ph1 .dt-rpm-del { color: #1E3A8A; }
+    .dt-rpm-ph2 .dt-rpm-del { color: #92400E; }
+    .dt-rpm-ph3 .dt-rpm-del { color: #14532D; }
+    .dt-rpm-ph4 .dt-rpm-del { color: #4C1D95; }
+
+    /* ── Modaux centrés 7 types ── */
+    .dt-modal-backdrop {
+      display: none; position: fixed; inset: 0;
+      background: rgba(15,23,42,0.60); z-index: 2000;
+      align-items: center; justify-content: center;
+    }
+    .dt-modal-backdrop.open { display: flex; }
+    .dt-modal {
+      background: white; border-radius: 16px; padding: 34px 39px;
+      max-width: 810px; width: 92%; max-height: 86vh; overflow-y: auto;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.28); position: relative;
+      animation: dtModalIn 0.22s ease; font-size: 1.3em;
+    }
+    @keyframes dtModalIn { from{opacity:0;transform:scale(0.93)} to{opacity:1;transform:none} }
+    .dt-modal-close {
+      position: absolute; top: 12px; right: 14px;
+      background: none; border: none; cursor: pointer;
+      font-size: 1.3em; color: #94A3B8; line-height: 1; padding: 4px;
+    }
+    .dt-modal-close:hover { color: #1E293B; }
+    .dt-modal-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+    .dt-modal-icon   { font-size: 2em; line-height: 1; flex-shrink: 0; }
+    .dt-modal-title  { font-size: 1.1em; font-weight: 700; color: #1E293B; }
+    .dt-modal-oneliner {
+      font-size: 0.82em; font-style: italic; color: #92400E;
+      background: #FEF3C7; border-left: 4px solid #D97706;
+      padding: 6px 12px; border-radius: 0 6px 6px 0; margin-bottom: 14px;
+    }
+    .dt-modal-section { margin-top: 12px; }
+    .dt-modal-section-title {
+      font-size: 0.64em; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.09em; color: #94A3B8; margin-bottom: 6px;
+    }
+    .dt-modal-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px; }
+    .dt-modal-list li {
+      font-size: 0.76em; padding: 5px 10px; border-radius: 6px;
+      background: #F8FAFC; border-left: 2px solid #E2E8F0; color: #374151;
+    }
+    .dt-modal-list--fix li { background: #F0FDF4; border-left-color: #86EFAC; }
+    .dt-modal-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+    .dt-modal-tag {
+      font-size: 0.63em; font-weight: 600; padding: 3px 9px;
+      border-radius: 4px; background: #1E293B; color: white;
+    }
+
+    /* ── AgentForce 2030 — Fun Fact Chat ──────────────────────────── */
+    @keyframes dt-af-pulse {
+      0%,100% { box-shadow: 0 0 12px rgba(56,189,248,0.3); }
+      50%      { box-shadow: 0 0 24px rgba(56,189,248,0.7); }
+    }
+    .dt-af-overlay {
+      display: none; position: fixed; inset: 0; z-index: 9000;
+      background: rgba(0,0,0,0.65); backdrop-filter: blur(4px);
+      align-items: center; justify-content: center;
+    }
+    .dt-af-overlay.dt-af-open { display: flex; }
+    .dt-af-dialog {
+      background: #0F172A; border: 1.5px solid #1E40AF;
+      border-radius: 16px; width: 600px; max-width: 94vw;
+      box-shadow: 0 0 40px rgba(30,64,175,0.35), 0 24px 60px rgba(0,0,0,0.6);
+      overflow: hidden; animation: dt-af-in 0.28s ease;
+    }
+    @keyframes dt-af-in {
+      from { opacity:0; transform: scale(0.93) translateY(12px); }
+      to   { opacity:1; transform: scale(1)    translateY(0); }
+    }
+    .dt-af-header {
+      background: linear-gradient(90deg,#1E3A8A,#1E1B4B);
+      padding: 13px 18px; display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid #1E40AF;
+    }
+    .dt-af-header-title {
+      color: #E2E8F0; font-size: 0.84em; font-weight: 600;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .dt-af-live-badge {
+      background: #0EA5E9; color: #fff; border-radius: 4px;
+      padding: 1px 7px; font-size: 0.76em; font-weight: 700;
+      animation: dt-af-pulse 1.6s ease-in-out infinite;
+    }
+    .dt-af-messages { padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
+    @keyframes dt-af-msg-in {
+      from { opacity:0; transform: translateY(10px); }
+      to   { opacity:1; transform: translateY(0); }
+    }
+    .dt-af-enter { animation: dt-af-msg-in 0.3s ease forwards; }
+    .dt-af-msg { display: flex; gap: 10px; align-items: flex-start; }
+    .dt-af-msg--user { flex-direction: row-reverse; }
+    .dt-af-avatar {
+      width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 1em;
+    }
+    .dt-af-msg--ai   .dt-af-avatar { background: #1E3A8A; border: 1px solid #3B82F6; }
+    .dt-af-msg--user .dt-af-avatar { background: #1E293B; border: 1px solid #475569; }
+    .dt-af-bubble {
+      border-radius: 12px; padding: 10px 14px;
+      font-size: 0.78em; line-height: 1.65; max-width: 80%;
+    }
+    .dt-af-msg--ai   .dt-af-bubble { background: #1E293B; color: #CBD5E1; border: 1px solid #1E40AF; border-top-left-radius: 4px; }
+    .dt-af-msg--user .dt-af-bubble { background: #1F2937; color: #D1D5DB; border: 1px solid #374151; border-top-right-radius: 4px; }
+    .dt-af-msg--2030 .dt-af-bubble { border-color: #6D28D9; background: #1A1033; }
+    .dt-af-sender {
+      font-size: 0.73em; font-weight: 700; margin-bottom: 5px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .dt-af-msg--ai   .dt-af-sender { color: #38BDF8; }
+    .dt-af-msg--user .dt-af-sender { color: #94A3B8; }
+    .dt-af-year {
+      background: #7C3AED; color: #fff; border-radius: 3px;
+      padding: 0 5px; font-size: 0.82em; font-weight: 800;
+      box-shadow: 0 0 8px rgba(124,58,237,0.5);
+    }
+    .dt-af-bubble code {
+      background: #0F172A; border: 1px solid #334155;
+      border-radius: 4px; padding: 2px 6px;
+      font-family: 'Courier New', monospace; font-size: 0.9em; color: #34D399;
+      white-space: nowrap;
+    }
+    .dt-af-bubble p { margin: 0 0 5px; }
+    .dt-af-bubble p:last-child { margin-bottom: 0; }
+    .dt-af-ticket {
+      display: inline-block; margin-top: 6px;
+      font-family: 'Courier New', monospace; font-size: 0.82em;
+      color: #7C3AED; background: #0F172A; border: 1px solid #4C1D95;
+      border-radius: 4px; padding: 2px 8px; letter-spacing: 0.04em;
+    }
+    .dt-af-footnote {
+      font-size: 0.76em; color: #4B5563; font-style: italic;
+      margin-top: 8px; border-top: 1px solid #1E293B; padding-top: 6px;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+      <section class="lc-title">
+<div class="lc-tw">
+  <img class="lc-tw-logo"     src="assets/london/image3.png" alt="London's Calling">
+  <img class="lc-tw-sponsors" src="assets/london/image2.png" alt="Sponsors">
+  <img class="lc-tw-skyline"  src="assets/london/image1.png" alt="London skyline">
+  <div class="lc-tw-title">
+    Salesforce Technical Debt
+    <span class="lc-tw-subtitle">Understand, measure and pay it back</span>
+  </div>
+  <div class="lc-tw-divider"></div>
+  <div class="lc-tw-hashtag">#LDNsCall #LC26</div>
+  <div class="lc-tw-speaker">
+    <strong>Fabrice Challier</strong>
+    Salesforce Technical Architect · London's Calling 2026
+  </div>
+</div>
+      </section>
+      <section data-markdown>
+<textarea data-template>
+## Salesforce Technical Debt
+
+### Understand, measure and pay it back
+
+_Fabrice Challier — Salesforce Technical Architect_
+      </textarea></section>
+      <section>
+<div class="bt-center">
+  <h2>Who in this room... 🙋</h2>
+  <div class="bt-grid">
+    <div class="bt-card fragment">
+      <div class="bt-card-icon">🚨</div>
+      <div class="bt-card-label">Friday after 5pm</div>
+      <div class="bt-card-sub">emergency deploy</div>
+    </div>
+    <div class="bt-card fragment">
+      <div class="bt-card-icon">📝</div>
+      <div class="bt-card-label">"We'll do it later"</div>
+      <div class="bt-card-sub">never came back</div>
+    </div>
+    <div class="bt-card fragment">
+      <div class="bt-card-icon">🌊</div>
+      <div class="bt-card-label">300-node Flow</div>
+      <div class="bt-card-sub">afraid to touch it</div>
+    </div>
+    <div class="bt-card fragment">
+      <div class="bt-card-icon">📋</div>
+      <div class="bt-card-label">Same rule × 8</div>
+      <div class="bt-card-sub">copy-pasted</div>
+    </div>
+  </div>
+  <p class="bt-punchline fragment">Welcome. This is a support group. ☕</p>
+  <p class="bt-warning fragment">🏎️ Fair warning: 40 minutes, way too much to cover, and we <em>will</em> go fast.<br><strong>Everything is in this deck</strong> — grab it after and explore at your own pace. No topic left behind. 📦</p>
+</div>
+      </section>
+      <section>
+<div class="bloc-center" id="bloc1">
+  <div class="bloc-num">Part 1 of 5</div>
+  <h1>The Reality of Technical Debt</h1>
+  <p class="bloc-sub">Why it happens, what it costs, how to recognise it</p>
+  <div class="pills">
+    <span class="pill">Definition</span>
+    <span class="pill">Numbers</span>
+    <span class="pill">7 types</span>
+    <span class="pill">Vicious cycle</span>
+  </div>
+</div>
+      </section>
+      <section>
+<h2>What is Technical Debt?</h2>
+<blockquote>
+  "Any quick design decision that simplifies development today but creates future overhead."
+  <br><cite style="font-size:0.85em;font-style:normal;opacity:0.75;">— Ward Cunningham, 1992</cite>
+</blockquote>
+<p style="font-size:0.80em;color:#475569;margin:12px 0 6px;">In Salesforce, it looks like…</p>
+<div class="dt-def-grid">
+  <div class="dt-def-card">
+    <div class="dt-def-icon">🧟</div>
+    <div class="dt-def-label">Dead Apex classes</div>
+    <div class="dt-def-quote">"might still be in use"</div>
+  </div>
+  <div class="dt-def-card">
+    <div class="dt-def-icon">👻</div>
+    <div class="dt-def-label">Ghost Fields</div>
+    <div class="dt-def-quote">"just in case we need them"</div>
+  </div>
+  <div class="dt-def-card">
+    <div class="dt-def-icon">⚡</div>
+    <div class="dt-def-label">No error handling</div>
+    <div class="dt-def-quote">"it works in prod"</div>
+  </div>
+  <div class="dt-def-card">
+    <div class="dt-def-icon">🔑</div>
+    <div class="dt-def-label">Hard-coded IDs</div>
+    <div class="dt-def-quote">"it never changes"</div>
+  </div>
+  <div class="dt-def-card">
+    <div class="dt-def-icon">🔄</div>
+    <div class="dt-def-label">SOQL in a loop</div>
+    <div class="dt-def-quote">"only a few records"</div>
+  </div>
+  <div class="dt-def-card">
+    <div class="dt-def-icon">📡</div>
+    <div class="dt-def-label">API v29</div>
+    <div class="dt-def-quote">"never had time to upgrade"</div>
+  </div>
+  <div class="dt-def-card">
+    <div class="dt-def-icon">🎭</div>
+    <div class="dt-def-label">100+ Permission Sets</div>
+    <div class="dt-def-quote">"one per project"</div>
+  </div>
+  <div class="dt-def-card">
+    <div class="dt-def-icon">🔀</div>
+    <div class="dt-def-label">WFR + PB + Flow</div>
+    <div class="dt-def-quote">"same object, all three"</div>
+  </div>
+</div>
+<div class="dt-def-cost fragment">
+  ⚠️ Every month, you pay the <strong>interest</strong> — analysis time, unexplained bugs, and fear of touching anything.
+</div>
+<span class="fragment" data-popup-show="def-ward" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
+<span class="fragment" data-popup-expand="def-ward" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
+<span class="fragment" data-popup-close="def-ward" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
+      </section>
+      <section>
+<h2>Technical Debt by the Numbers</h2>
+<div class="dt-stats">
+  <div class="dt-stat-item">
+    <div class="dt-stat-label">of Salesforce projects have undocumented technical debt</div>
+    <div class="dt-stat-row">
+      <div class="dt-stat-track"><div class="dt-stat-fill" data-pct="72" data-color="warn"></div></div>
+      <div class="dt-stat-val" id="dts1v">0%</div>
+    </div>
+  </div>
+  <div class="dt-stat-item">
+    <div class="dt-stat-label">of development time spent <em>understanding</em> existing code — not producing</div>
+    <div class="dt-stat-row">
+      <div class="dt-stat-track"><div class="dt-stat-fill" data-pct="42" data-color="blue"></div></div>
+      <div class="dt-stat-val" id="dts2v">0%</div>
+    </div>
+  </div>
+  <div class="dt-stat-item">
+    <div class="dt-stat-label">of Salesforce orgs have more than 20% of custom fields never populated</div>
+    <div class="dt-stat-row">
+      <div class="dt-stat-track"><div class="dt-stat-fill" data-pct="58" data-color="green"></div></div>
+      <div class="dt-stat-val" id="dts3v">0%</div>
+    </div>
+  </div>
+  <div class="dt-stat-item">
+    <div class="dt-stat-label">of velocity lost on average in teams exposed to high technical debt — Google / DORA Research</div>
+    <div class="dt-stat-row">
+      <div class="dt-stat-track"><div class="dt-stat-fill" data-pct="30" data-color="warn"></div></div>
+      <div class="dt-stat-val" id="dts4v">0%</div>
+    </div>
+  </div>
+  <div class="dt-stat-item">
+    <div class="dt-stat-label">of the global IT budget spent on maintaining legacy — versus only 28% on innovation (McKinsey 2023)</div>
+    <div class="dt-stat-row">
+      <div class="dt-stat-track"><div class="dt-stat-fill" data-pct="72" data-color="blue"></div></div>
+      <div class="dt-stat-val" id="dts5v">0%</div>
+    </div>
+  </div>
+</div>
+<p style="font-size:0.60em;color:#94A3B8;margin-top:10px;text-align:center;">Sources : Salesforce Architect community · Scale Center benchmarks · Google DORA · McKinsey Digital</p>
+      </section>
+      <section>
+<h2>The 7 Types of Debt — Salesforce Edition</h2>
+<div class="dt-types">
+  <div class="dt-type-card" style="--delay:0.10s"><span class="dt-type-icon">⚙️</span><div><strong>Automation</strong><br><small>Nested Flows, zombie Process Builders</small></div></div>
+  <div class="dt-type-card" style="--delay:0.22s"><span class="dt-type-icon">🏗️</span><div><strong>Architecture</strong><br><small>Duplicate objects, circular relationships</small></div></div>
+  <div class="dt-type-card" style="--delay:0.34s"><span class="dt-type-icon">📊</span><div><strong>Data model</strong><br><small>Orphan fields, uncontrolled picklists</small></div></div>
+  <div class="dt-type-card" style="--delay:0.46s"><span class="dt-type-icon">💻</span><div><strong>Apex Code</strong><br><small>0 tests, 0 comments, tight coupling</small></div></div>
+  <div class="dt-type-card" style="--delay:0.58s"><span class="dt-type-icon">🔗</span><div><strong>Integrations</strong><br><small>Hardcoded IDs, API v20 still in use</small></div></div>
+  <div class="dt-type-card" style="--delay:0.70s"><span class="dt-type-icon">📋</span><div><strong>Governance</strong><br><small>0 naming conventions, 0 descriptions</small></div></div>
+  <div class="dt-type-card dt-type-card--wide" style="--delay:0.82s"><span class="dt-type-icon">🔐</span><div><strong>Security — the most dangerous, the least visible</strong><br><small>Overly permissive profiles, misconfigured Connected Apps, oversized OAuth scope</small></div></div>
+</div>
+<span class="fragment" data-modal-open="modal-automation"   style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
+<span class="fragment" data-modal-close="modal-automation"   data-modal-open="modal-architecture"  style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
+<span class="fragment" data-modal-close="modal-architecture" data-modal-open="modal-datamodel"     style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
+<span class="fragment" data-modal-close="modal-datamodel"    data-modal-open="modal-apex"          style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
+<span class="fragment" data-modal-close="modal-apex"         data-modal-open="modal-integration"   style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
+<span class="fragment" data-modal-close="modal-integration"  data-modal-open="modal-governance"    style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
+<span class="fragment" data-modal-close="modal-governance"   data-modal-open="modal-security"      style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
+<span class="fragment" data-modal-close="modal-security"                                           style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
+      </section>
+      <section>
+<h2>The Vicious Cycle</h2>
+<div class="dt-cycle-wrap">
+  <div class="dt-cycle-box dt-cycle--start fragment" id="dc1" data-fragment-index="0">
+    <span class="dt-cycle-icon">🏃</span>
+    <strong>Sprint under pressure</strong>
+    <span class="dt-cycle-sub">We'll skip the tests — we'll still deliver before the demo</span>
+  </div>
+  <div class="dt-cycle-arr fragment" id="dca1" data-fragment-index="0">▶</div>
+  <div class="dt-cycle-box dt-cycle--mid fragment" id="dc2" data-fragment-index="1">
+    <span class="dt-cycle-icon">🙈</span>
+    <strong>Silent debt</strong>
+    <span class="dt-cycle-sub">Nobody knows it's going to break... until it does</span>
+  </div>
+  <div class="dt-cycle-arr fragment" id="dca4" data-fragment-index="3" style="writing-mode:vertical-rl;transform:rotate(180deg);">▲</div>
+  <div class="dt-cycle-center fragment" id="dcc" data-fragment-index="3">↻<br><em>And we<br>start again</em></div>
+  <div class="dt-cycle-arr fragment" id="dca2" data-fragment-index="1" style="writing-mode:vertical-rl;">▼</div>
+  <div class="dt-cycle-box dt-cycle--fix fragment" id="dc4" data-fragment-index="3">
+    <span class="dt-cycle-icon">🚑</span>
+    <strong>Emergency sprint</strong>
+    <span class="dt-cycle-sub">Quick fix → new debt → back to square one</span>
+  </div>
+  <div class="dt-cycle-arr fragment" id="dca3" data-fragment-index="2" style="justify-content:center;align-items:center;transform:rotate(180deg);">▶</div>
+  <div class="dt-cycle-box dt-cycle--alert fragment" id="dc3" data-fragment-index="2">
+    <span class="dt-cycle-icon">🚨</span>
+    <strong>Production incident</strong>
+    <span class="dt-cycle-sub">Crisis meeting, rollback, post-mortem, cold pizza</span>
+  </div>
+</div>
+      </section>
+      <section>
+<div class="bloc-center" id="bloc2">
+  <div class="bloc-num">Part 2 of 5</div>
+  <h1>Selling Technical Debt</h1>
+  <p class="bloc-sub">Because technology alone isn't enough — you need to convince people</p>
+  <div class="pills">
+    <span class="pill">4 profiles</span>
+    <span class="pill">Cognitive biases</span>
+    <span class="pill">Tailored language</span>
+    <span class="pill">Agentforce</span>
+  </div>
+</div>
+      </section>
+      <section>
+<h2>One Reality — 4 Motivation Systems</h2>
+<div class="dt-profiles">
+  <div class="dt-profile dt-profile--dev fragment">
+    <div class="dt-profile-icon">👨‍💻</div>
+    <div>
+      <div class="dt-profile-name">The Developer — <em style="font-weight:400">suffers from it</em></div>
+      <div class="dt-profile-arg">"Every workaround today becomes an incident tomorrow."</div>
+    </div>
+  </div>
+  <div class="dt-profile dt-profile--po fragment">
+    <div class="dt-profile-icon">📋</div>
+    <div>
+      <div class="dt-profile-name">The Product Owner — <em style="font-weight:400">works around it</em></div>
+      <div class="dt-profile-arg">"Every cleanup sprint accelerates the next 10."</div>
+    </div>
+  </div>
+  <div class="dt-profile dt-profile--mgmt fragment">
+    <div class="dt-profile-icon">💼</div>
+    <div>
+      <div class="dt-profile-name">Management — <em style="font-weight:400">funds it</em></div>
+      <div class="dt-profile-arg">"Inaction already costs money. It's just invisible."</div>
+    </div>
+  </div>
+  <div class="dt-profile dt-profile--client fragment">
+    <div class="dt-profile-icon">🎯</div>
+    <div>
+      <div class="dt-profile-name">The End User — <em style="font-weight:400">pays for it</em></div>
+      <div class="dt-profile-arg">"Technical debt always ends up becoming user debt."</div>
+    </div>
+  </div>
+</div>
+      </section>
+      <section>
+<h2>👨‍💻 The Developer — <em style="font-weight:400;font-size:0.85em;color:#475569">suffers from it</em></h2>
+<div class="dt-prof2">
+  <div class="dt-prof-hook">"Every workaround today becomes an incident tomorrow."</div>
+  <div class="dt-prof2-impacts">
+    <div class="dt-prof2-card dt-prof2-card--dev fragment"><div class="dt-prof2-icon">⏰</div><div class="dt-prof2-text">3am production wake-ups</div></div>
+    <div class="dt-prof2-card dt-prof2-card--dev fragment"><div class="dt-prof2-icon">😤</div><div class="dt-prof2-text">Daily frustration</div></div>
+    <div class="dt-prof2-card dt-prof2-card--dev fragment"><div class="dt-prof2-icon">📉</div><div class="dt-prof2-text">Velocity collapsing</div></div>
+    <div class="dt-prof2-card dt-prof2-card--dev fragment"><div class="dt-prof2-icon">🧩</div><div class="dt-prof2-text">Unable to innovate</div></div>
+    <div class="dt-prof2-card dt-prof2-card--dev fragment"><div class="dt-prof2-icon">🧠</div><div class="dt-prof2-text">Cognitive overload</div></div>
+  </div>
+  <div class="dt-prof2-lang fragment">
+    <span class="dt-prof2-lang-label">Speak their language →</span>
+    <span class="dt-lang-tag">maintainability</span>
+    <span class="dt-lang-tag">cognitive load</span>
+    <span class="dt-lang-tag">refactoring</span>
+    <span class="dt-lang-tag">debugging cost</span>
+    <span class="dt-lang-tag">coupling</span>
+    <span class="dt-lang-tag">burnout</span>
+  </div>
+  <div class="dt-prof-bias fragment">
+    <div class="dt-bias-icon">⚠️</div>
+    <div class="dt-bias-body">
+      <div class="dt-bias-label">Pain aversion bias</div>
+      <div class="dt-bias-quote">"You'll keep dealing with this code every day. 10 minutes lost per ticket = weeks per year."</div>
+    </div>
+  </div>
+</div>
+      </section>
+      <section>
+<h2>📋 The Product Owner — <em style="font-weight:400;font-size:0.85em;color:#475569">works around it</em></h2>
+<div class="dt-prof2">
+  <div class="dt-prof-hook dt-prof-hook--po">"Every cleanup sprint accelerates the next 10."</div>
+  <div class="dt-prof2-impacts">
+    <div class="dt-prof2-card dt-prof2-card--po fragment"><div class="dt-prof2-icon">🐌</div><div class="dt-prof2-text">Roadmap stalling</div></div>
+    <div class="dt-prof2-card dt-prof2-card--po fragment"><div class="dt-prof2-icon">🎲</div><div class="dt-prof2-text">Unpredictable estimates</div></div>
+    <div class="dt-prof2-card dt-prof2-card--po fragment"><div class="dt-prof2-icon">⏰</div><div class="dt-prof2-text">Features always late</div></div>
+    <div class="dt-prof2-card dt-prof2-card--po fragment"><div class="dt-prof2-icon">🔀</div><div class="dt-prof2-text">Dependency chaos</div></div>
+    <div class="dt-prof2-card dt-prof2-card--po fragment"><div class="dt-prof2-icon">⚖️</div><div class="dt-prof2-text">Debt vs. features</div></div>
+  </div>
+  <div class="dt-prof2-lang fragment">
+    <span class="dt-prof2-lang-label">Speak their language →</span>
+    <span class="dt-lang-tag dt-lang-tag--po">velocity</span>
+    <span class="dt-lang-tag dt-lang-tag--po">lead time</span>
+    <span class="dt-lang-tag dt-lang-tag--po">delivery predictability</span>
+    <span class="dt-lang-tag dt-lang-tag--po">sprint stability</span>
+    <span class="dt-lang-tag dt-lang-tag--po">roadmap acceleration</span>
+  </div>
+  <div class="dt-prof-bias fragment dt-prof-bias--po">
+    <div class="dt-bias-icon">⚠️</div>
+    <div class="dt-bias-body">
+      <div class="dt-bias-label dt-bias-label--po">Future projection bias</div>
+      <div class="dt-bias-quote">"If we don't address this now, every feature will cost more. Every day on regressions = undelivered features."</div>
+    </div>
+  </div>
+</div>
+      </section>
+      <section>
+<h2>💼 Management — <em style="font-weight:400;font-size:0.85em;color:#475569">funds it</em></h2>
+<div class="dt-prof2">
+  <div class="dt-prof-hook dt-prof-hook--mgmt">"Inaction already costs money. It's just invisible."</div>
+  <div class="dt-prof2-impacts">
+    <div class="dt-prof2-card dt-prof2-card--mgmt fragment"><div class="dt-prof2-icon">💸</div><div class="dt-prof2-text">Hidden costs</div></div>
+    <div class="dt-prof2-card dt-prof2-card--mgmt fragment"><div class="dt-prof2-icon">🚪</div><div class="dt-prof2-text">Senior staff leave</div></div>
+    <div class="dt-prof2-card dt-prof2-card--mgmt fragment"><div class="dt-prof2-icon">🆘</div><div class="dt-prof2-text">Escalating incidents</div></div>
+    <div class="dt-prof2-card dt-prof2-card--mgmt fragment"><div class="dt-prof2-icon">🔑</div><div class="dt-prof2-text">Key person risk</div></div>
+    <div class="dt-prof2-card dt-prof2-card--mgmt fragment"><div class="dt-prof2-icon">📏</div><div class="dt-prof2-text">Can't scale teams</div></div>
+  </div>
+  <div class="dt-prof2-lang fragment">
+    <span class="dt-prof2-lang-label">Speak their language →</span>
+    <span class="dt-lang-tag dt-lang-tag--mgmt">ROI</span>
+    <span class="dt-lang-tag dt-lang-tag--mgmt">operational risk</span>
+    <span class="dt-lang-tag dt-lang-tag--mgmt">cost reduction</span>
+    <span class="dt-lang-tag dt-lang-tag--mgmt">team scalability</span>
+    <span class="dt-lang-tag dt-lang-tag--mgmt">dependency risk</span>
+    <span class="dt-lang-tag dt-lang-tag--mgmt">productivity leakage</span>
+  </div>
+  <div class="dt-prof-bias fragment dt-prof-bias--mgmt">
+    <div class="dt-bias-icon">⚠️</div>
+    <div class="dt-bias-body">
+      <div class="dt-bias-label dt-bias-label--mgmt">Systemic risk bias</div>
+      <div class="dt-bias-quote">"A single departure can block an entire domain. Adding legacy doesn't increase the value of what we've already invested."</div>
+    </div>
+  </div>
+</div>
+      </section>
+      <section>
+<h2>🎯 The End User — <em style="font-weight:400;font-size:0.85em;color:#475569">pays for it</em></h2>
+<div class="dt-prof2">
+  <div class="dt-prof-hook dt-prof-hook--client">"Technical debt always ends up becoming user debt."</div>
+  <div class="dt-prof2-impacts">
+    <div class="dt-prof2-card dt-prof2-card--client fragment"><div class="dt-prof2-icon">🐢</div><div class="dt-prof2-text">Slowness & timeouts</div></div>
+    <div class="dt-prof2-card dt-prof2-card--client fragment"><div class="dt-prof2-icon">🔁</div><div class="dt-prof2-text">Recurring bugs</div></div>
+    <div class="dt-prof2-card dt-prof2-card--client fragment"><div class="dt-prof2-icon">🎭</div><div class="dt-prof2-text">Inconsistent UX</div></div>
+    <div class="dt-prof2-card dt-prof2-card--client fragment"><div class="dt-prof2-icon">🎧</div><div class="dt-prof2-text">Ineffective support</div></div>
+    <div class="dt-prof2-card dt-prof2-card--client fragment"><div class="dt-prof2-icon">💔</div><div class="dt-prof2-text">Loss of trust</div></div>
+  </div>
+  <div class="dt-prof2-lang fragment">
+    <span class="dt-prof2-lang-label">Speak their language →</span>
+    <span class="dt-lang-tag dt-lang-tag--client">user experience</span>
+    <span class="dt-lang-tag dt-lang-tag--client">reliability</span>
+    <span class="dt-lang-tag dt-lang-tag--client">performance</span>
+    <span class="dt-lang-tag dt-lang-tag--client">trust</span>
+    <span class="dt-lang-tag dt-lang-tag--client">consistency</span>
+  </div>
+  <div class="dt-prof-bias fragment dt-prof-bias--client">
+    <div class="dt-bias-icon">⚠️</div>
+    <div class="dt-bias-body">
+      <div class="dt-bias-label dt-bias-label--client">Negativity dominance bias</div>
+      <div class="dt-bias-quote">"A bug leaves a bigger mark than a successful feature. A few seconds of latency progressively destroys engagement."</div>
+    </div>
+  </div>
+</div>
+      </section>
+      <section>
+<h2>They're not the enemy.</h2>
+<div class="dt-ally-section">
+  <div class="dt-ally-grid fragment">
+    <div class="dt-ally-card dt-ally-card--dev">
+      <div class="dt-ally-badge">✓</div>
+      <div class="dt-ally-icon">👨‍💻</div>
+      <div class="dt-ally-name">Developer</div>
+      <div class="dt-ally-role">suffers from it</div>
+    </div>
+    <div class="dt-ally-card dt-ally-card--po">
+      <div class="dt-ally-badge">✓</div>
+      <div class="dt-ally-icon">📋</div>
+      <div class="dt-ally-name">Product Owner</div>
+      <div class="dt-ally-role">works around it</div>
+    </div>
+    <div class="dt-ally-card dt-ally-card--mgmt">
+      <div class="dt-ally-badge">✓</div>
+      <div class="dt-ally-icon">💼</div>
+      <div class="dt-ally-name">Management</div>
+      <div class="dt-ally-role">funds it</div>
+    </div>
+    <div class="dt-ally-card dt-ally-card--client">
+      <div class="dt-ally-badge">✓</div>
+      <div class="dt-ally-icon">🎯</div>
+      <div class="dt-ally-name">End User</div>
+      <div class="dt-ally-role">pays for it</div>
+    </div>
+  </div>
+  <div class="dt-ally-arrows fragment">↓ ↓ ↓ ↓</div>
+  <div class="dt-enemy-card fragment">
+    <div class="dt-enemy-label">☠️ &nbsp; The real enemy</div>
+    <div class="dt-enemy-title">Technical Debt</div>
+    <div class="dt-enemy-tags">
+      <span class="dt-enemy-tag">Silent</span>
+      <span class="dt-enemy-tag">Invisible</span>
+      <span class="dt-enemy-tag">Cumulative</span>
+      <span class="dt-enemy-tag">Growing every day</span>
+    </div>
+  </div>
+  <div class="dt-ally-conclusion fragment">
+    ✅ &nbsp; Your job: make them all speak the same language — and point it at the same target.
+  </div>
+  <button class="dt-ai-trigger fragment">
+    🤖 &nbsp; AI can help with that…
+  </button>
+  <span class="fragment" data-ai-popup="open"  style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
+  <span class="fragment" data-ai-popup="close" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
+</div>
+      </section>
+      <section>
+<h2>Agentforce — The 2026 Argument</h2>
+<div class="dt-agent-hook">"Our AI roadmap is blocked by the quality of our data."</div>
+<div class="dt-agent-blockers">
+  <div class="dt-agent-row">
+    <div class="dt-agent-debt"><span class="dt-agent-icon">📝</span> Fields without descriptions</div>
+    <div class="dt-agent-sep">→</div>
+    <div class="dt-agent-impact">The agent doesn't understand what it reads</div>
+  </div>
+  <div class="dt-agent-row">
+    <div class="dt-agent-debt"><span class="dt-agent-icon">🗃️</span> Duplicate data</div>
+    <div class="dt-agent-sep">→</div>
+    <div class="dt-agent-impact">Inconsistent responses &amp; hallucinations</div>
+  </div>
+  <div class="dt-agent-row">
+    <div class="dt-agent-debt"><span class="dt-agent-icon">⚙️</span> Overly complex Flows</div>
+    <div class="dt-agent-sep">→</div>
+    <div class="dt-agent-impact">Impossible to automate on top</div>
+  </div>
+  <div class="dt-agent-row">
+    <div class="dt-agent-debt"><span class="dt-agent-icon">🔓</span> Overly permissive profiles</div>
+    <div class="dt-agent-sep">→</div>
+    <div class="dt-agent-impact">The agent oversteps permissions</div>
+  </div>
+  <div class="dt-agent-row">
+    <div class="dt-agent-debt"><span class="dt-agent-icon">📋</span> No governance standards</div>
+    <div class="dt-agent-sep">→</div>
+    <div class="dt-agent-impact">Every AI prompt generates new debt</div>
+  </div>
+</div>
+<div class="dt-agent-pitch">
+  🏆 &ldquo;Our competitors with a clean org activate Agentforce in <strong>2 weeks</strong>.<br>We&rsquo;re <strong>6 months</strong> into a feasibility analysis.&rdquo;
+</div>
+<span class="fragment" data-popup-show="agentforce-ironie" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
+<span class="fragment" data-popup-expand="agentforce-ironie" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
+<span class="fragment" data-popup-close="agentforce-ironie" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
+      </section>
+      <section>
+<div class="bloc-center" id="bloc3">
+  <div class="bloc-num">Part 3 of 5</div>
+  <h1>Prioritising with the Matrix</h1>
+  <p class="bloc-sub">Only fix what is truly worth fixing</p>
+  <div class="pills">
+    <span class="pill">Impact × Cost</span>
+    <span class="pill">Concrete examples</span>
+    <span class="pill">5 ways to prioritise</span>
+  </div>
+</div>
+      </section>
+      <section>
+<h2>The Impact × Cost Matrix</h2>
+<div style="display:flex;align-items:center;gap:20px;margin-bottom:6px;">
+  <div style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:0.62em;color:#64748B;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;">Business impact ▲</div>
+  <div style="flex:1;">
+    <div class="dt-matrice-grid">
+      <div class="dt-quad dt-quad--do fragment">
+        <div class="dt-quad-label">✅ DO NOW</div>
+        <div class="dt-quad-desc"><em>Low cost — High impact</em><br>
+          · Remove inactive Process Builders<br>
+          · SOQL without index on large objects<br>
+          · Deactivate Flows never executed<br>
+          · Fix Apex Triggers without bulkification<br>
+          · Remove unused fields visible everywhere</div>
+      </div>
+      <div class="dt-quad dt-quad--plan fragment">
+        <div class="dt-quad-label">📅 PLAN</div>
+        <div class="dt-quad-desc"><em>High cost — High impact</em><br>
+          · Migration Process Builder → Flows<br>
+          · Refactor the non-scalable sharing model<br>
+          · Decouple point-to-point integrations<br>
+          · Refactoring Apex with near-zero coverage<br>
+          · CI/CD overhaul and DevOps strategy</div>
+      </div>
+      <div class="dt-quad dt-quad--quick fragment">
+        <div class="dt-quad-label">⚡ QUICK WIN</div>
+        <div class="dt-quad-desc"><em>Low cost — Moderate impact</em><br>
+          · Document the main custom objects<br>
+          · Clean up unused picklist values<br>
+          · Remove reports/dashboards never used<br>
+          · Add descriptions on critical fields<br>
+          · Harmonise Apex naming conventions</div>
+      </div>
+      <div class="dt-quad dt-quad--skip fragment">
+        <div class="dt-quad-label">🚫 IGNORE</div>
+        <div class="dt-quad-desc"><em>High cost — Low impact</em><br>
+          · Renaming an object that's "not pretty" but stable<br>
+          · Rewriting Apex code that works<br>
+          · Changing historical API names<br>
+          · Standardising minor invisible conventions<br>
+          · Replacing stable components "to modernise"</div>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:0.60em;color:#94A3B8;margin-top:4px;padding:0 4px;">
+      <span>⬅ Low cost</span><span>High cost ➡</span>
+    </div>
+  </div>
+</div>
+<p style="font-size:0.72em;color:#64748B;text-align:center;font-style:italic;margin-top:4px;">
+"Every debt has a cost... but not necessarily a business value worth addressing."
+</p>
+      </section>
+      <section>
+<h2>5 Ways to Prioritise Technical Debt</h2>
+<p style="font-size:0.72em;color:#475569;margin-bottom:14px;font-style:italic;">There is no single order for addressing debt. The real question: by what value system do you prioritise?</p>
+<div class="dt-prio5-grid">
+  <div class="dt-prio5-card dt-prio5--tech fragment">
+    <div class="dt-prio5-icon">🔗</div>
+    <div class="dt-prio5-title">Dependencies</div>
+    <div class="dt-prio5-desc">Salesforce enforces the order — miss it = guaranteed error</div>
+  </div>
+  <div class="dt-prio5-card dt-prio5--risk fragment">
+    <div class="dt-prio5-icon">💥</div>
+    <div class="dt-prio5-title">Production risk</div>
+    <div class="dt-prio5-desc">What can wake you up at 3am</div>
+  </div>
+  <div class="dt-prio5-card dt-prio5--roi fragment">
+    <div class="dt-prio5-icon">💰</div>
+    <div class="dt-prio5-title">ROI / hidden cost</div>
+    <div class="dt-prio5-desc">What wastes the most team time</div>
+  </div>
+  <div class="dt-prio5-card dt-prio5--strat fragment">
+    <div class="dt-prio5-icon">🚧</div>
+    <div class="dt-prio5-title">Strategic blocker</div>
+    <div class="dt-prio5-desc">The debt that prevents the business from moving forward</div>
+  </div>
+  <div class="dt-prio5-card dt-prio5--domino fragment">
+    <div class="dt-prio5-icon">🔥</div>
+    <div class="dt-prio5-title">Domino effect</div>
+    <div class="dt-prio5-desc">One fix that improves everything else</div>
+  </div>
+</div>
+      </section>
+      <section>
+<h2>🔗 Prioritising by Dependency Order</h2>
+<div class="dt-appr-hook">"Salesforce enforces an order. Miss it = guaranteed error."</div>
+<div class="dt-dep-chain">
+  <div class="dt-dep-node fragment">⚙️<br><strong>Automations</strong><br><small>Flows, Process Builders, Workflow Rules</small></div>
+  <div class="dt-dep-arr fragment">▶</div>
+  <div class="dt-dep-node fragment">🖥️<br><strong>Layouts</strong><br><small>Page Layouts, Lightning Pages, Quick Actions</small></div>
+  <div class="dt-dep-arr fragment">▶</div>
+  <div class="dt-dep-node fragment">🧩<br><strong>Business Logic</strong><br><small>Unused Apex classes, unused Flows</small></div>
+  <div class="dt-dep-arr fragment">▶</div>
+  <div class="dt-dep-node fragment">📦<br><strong>Objects</strong><br><small>Custom Objects — the final boss</small></div>
+  <div class="dt-dep-arr fragment">▶</div>
+  <div class="dt-dep-node fragment">📊<br><strong>Fields</strong><br><small>After dependencies lifted</small></div>
+</div>
+<p class="dt-appr-usecase fragment">When to use: mass cleanup · decommissioning · metadata rationalisation</p>
+<table class="dt-audience">
+  <thead><tr><th>Logic</th><th>Who it speaks to most</th><th>What they care about</th></tr></thead>
+  <tbody>
+    <tr class="dt-aud-active" style="--aud-accent:#1D4ED8"><td>Dependencies</td><td>Architects, Release Managers, Tech Leads, Integration Leads</td><td>Delivery sequencing, deployment stability, avoiding cascading failures</td></tr>
+    <tr><td>Production risk</td><td>Support teams, Operations, Platform Owners, CIO/CTO, Service Owners</td><td>Incidents, outages, data corruption, business continuity</td></tr>
+    <tr><td>ROI / hidden cost</td><td>Product Owners, Delivery Managers, PMO, Finance, Engineering Managers</td><td>Team productivity, delivery speed, operational cost, wasted effort</td></tr>
+    <tr><td>Strategic blocker</td><td>Enterprise Architects, Transformation Leads, Executives, Business Sponsors</td><td>Ability to launch new capabilities, scalability, roadmap execution</td></tr>
+    <tr><td>Domino effect</td><td>Senior Architects, Technical Leads, Platform Owners</td><td>Maximum architectural leverage, simplification, reducing systemic complexity</td></tr>
+  </tbody>
+</table>
+      </section>
+      <section>
+<h2>💥 Prioritising by Production Risk</h2>
+<div class="dt-appr-hook dt-appr-hook--risk">"What can wake you up at 3am?"</div>
+<div class="dt-risk-list">
+  <div class="dt-risk-item dt-risk--crit fragment">🔴 <strong>Critical</strong> — Frequent CPU limits · Non-selective SOQL · Apex without tests · critical synchronous integrations</div>
+  <div class="dt-risk-item dt-risk--high fragment">🟠 <strong>High</strong> — Sharing recalculation · Recursive Flows · Multiple triggers on the same object</div>
+  <div class="dt-risk-item dt-risk--med fragment">🟡 <strong>Moderate</strong> — Overloaded Lightning Pages · Queries without index · Orphaned Scheduled Jobs</div>
+</div>
+<p class="dt-appr-kpi fragment">KPIs: incidents · downtime · rollback · failed deployments — DevOps/SRE angle</p>
+<table class="dt-audience">
+  <thead><tr><th>Logic</th><th>Who it speaks to most</th><th>What they care about</th></tr></thead>
+  <tbody>
+    <tr><td>Dependencies</td><td>Architects, Release Managers, Tech Leads, Integration Leads</td><td>Delivery sequencing, deployment stability, avoiding cascading failures</td></tr>
+    <tr class="dt-aud-active" style="--aud-accent:#EF4444"><td>Production risk</td><td>Support teams, Operations, Platform Owners, CIO/CTO, Service Owners</td><td>Incidents, outages, data corruption, business continuity</td></tr>
+    <tr><td>ROI / hidden cost</td><td>Product Owners, Delivery Managers, PMO, Finance, Engineering Managers</td><td>Team productivity, delivery speed, operational cost, wasted effort</td></tr>
+    <tr><td>Strategic blocker</td><td>Enterprise Architects, Transformation Leads, Executives, Business Sponsors</td><td>Ability to launch new capabilities, scalability, roadmap execution</td></tr>
+    <tr><td>Domino effect</td><td>Senior Architects, Technical Leads, Platform Owners</td><td>Maximum architectural leverage, simplification, reducing systemic complexity</td></tr>
+  </tbody>
+</table>
+      </section>
+      <section>
+<h2>💰 Prioritising by ROI / Hidden Cost</h2>
+<div class="dt-appr-hook dt-appr-hook--roi">"How much does this inefficiency cost each month?"</div>
+<div class="dt-roi-list">
+  <div class="dt-roi-item fragment"><span class="dt-roi-icon">⏱️</span><span class="dt-roi-label">Manual deployments</span><span class="dt-roi-tag dt-roi--time">2–3h / week</span></div>
+  <div class="dt-roi-item fragment"><span class="dt-roi-icon">🔁</span><span class="dt-roi-label">Manual regression testing</span><span class="dt-roi-tag dt-roi--time">1 day / sprint</span></div>
+  <div class="dt-roi-item fragment"><span class="dt-roi-icon">📋</span><span class="dt-roi-label">Missing documentation — slow onboarding</span><span class="dt-roi-tag dt-roi--money">2–4 weeks / dev</span></div>
+  <div class="dt-roi-item fragment"><span class="dt-roi-icon">🧪</span><span class="dt-roi-label">Unstable Sandboxes · No CI/CD</span><span class="dt-roi-tag dt-roi--time">N rollbacks / month</span></div>
+</div>
+<p class="dt-appr-kpi fragment">KPIs: velocity · lead time · delivery cost — Very powerful with managers</p>
+<table class="dt-audience">
+  <thead><tr><th>Logic</th><th>Who it speaks to most</th><th>What they care about</th></tr></thead>
+  <tbody>
+    <tr><td>Dependencies</td><td>Architects, Release Managers, Tech Leads, Integration Leads</td><td>Delivery sequencing, deployment stability, avoiding cascading failures</td></tr>
+    <tr><td>Production risk</td><td>Support teams, Operations, Platform Owners, CIO/CTO, Service Owners</td><td>Incidents, outages, data corruption, business continuity</td></tr>
+    <tr class="dt-aud-active" style="--aud-accent:#16A34A"><td>ROI / hidden cost</td><td>Product Owners, Delivery Managers, PMO, Finance, Engineering Managers</td><td>Team productivity, delivery speed, operational cost, wasted effort</td></tr>
+    <tr><td>Strategic blocker</td><td>Enterprise Architects, Transformation Leads, Executives, Business Sponsors</td><td>Ability to launch new capabilities, scalability, roadmap execution</td></tr>
+    <tr><td>Domino effect</td><td>Senior Architects, Technical Leads, Platform Owners</td><td>Maximum architectural leverage, simplification, reducing systemic complexity</td></tr>
+  </tbody>
+</table>
+      </section>
+      <section>
+<h2>🚧 Prioritising by Strategic Blocker</h2>
+<div class="dt-appr-hook dt-appr-hook--strat">"Technical debt becomes business debt."</div>
+<div class="dt-block-list">
+  <div class="dt-block-item dt-block--blocked fragment">
+    <div class="dt-block-label">🔒 Blocked</div>
+    Agentforce / AI impossible without clean data and documented metadata
+  </div>
+  <div class="dt-block-item dt-block--unlocked fragment">
+    <div class="dt-block-label">✅ Unblocked</div>
+    Agentforce activation in 2 weeks vs 6 months of feasibility analysis
+  </div>
+  <div class="dt-block-item dt-block--blocked fragment">
+    <div class="dt-block-label">🔒 Blocked</div>
+    Customer 360 impossible if data model is inconsistent or duplicated
+  </div>
+  <div class="dt-block-item dt-block--unlocked fragment">
+    <div class="dt-block-label">✅ Unblocked</div>
+    Unified customer view · multi-country scalability · cloud migration possible
+  </div>
+</div>
+<p class="dt-appr-usecase fragment">Angle: enterprise architect / strategic transformation</p>
+<table class="dt-audience">
+  <thead><tr><th>Logic</th><th>Who it speaks to most</th><th>What they care about</th></tr></thead>
+  <tbody>
+    <tr><td>Dependencies</td><td>Architects, Release Managers, Tech Leads, Integration Leads</td><td>Delivery sequencing, deployment stability, avoiding cascading failures</td></tr>
+    <tr><td>Production risk</td><td>Support teams, Operations, Platform Owners, CIO/CTO, Service Owners</td><td>Incidents, outages, data corruption, business continuity</td></tr>
+    <tr><td>ROI / hidden cost</td><td>Product Owners, Delivery Managers, PMO, Finance, Engineering Managers</td><td>Team productivity, delivery speed, operational cost, wasted effort</td></tr>
+    <tr class="dt-aud-active" style="--aud-accent:#F97316"><td>Strategic blocker</td><td>Enterprise Architects, Transformation Leads, Executives, Business Sponsors</td><td>Ability to launch new capabilities, scalability, roadmap execution</td></tr>
+    <tr><td>Domino effect</td><td>Senior Architects, Technical Leads, Platform Owners</td><td>Maximum architectural leverage, simplification, reducing systemic complexity</td></tr>
+  </tbody>
+</table>
+      </section>
+      <section>
+<h2>🔥 Prioritising by Domino Effect</h2>
+<div class="dt-appr-hook dt-appr-hook--domino">"Some fixes have exponential returns."</div>
+<div class="dt-domino-wrap">
+  <div class="dt-domino-row fragment">
+    <div class="dt-domino-cause">CI/CD implemented</div>
+    <div class="dt-domino-arr">→</div>
+    <div class="dt-domino-effects">
+      <span class="dt-domino-effect">↓ incidents</span>
+      <span class="dt-domino-effect">↑ velocity</span>
+      <span class="dt-domino-effect">↓ delivery costs</span>
+      <span class="dt-domino-effect">↑ quality</span>
+    </div>
+  </div>
+  <div class="dt-domino-row fragment">
+    <div class="dt-domino-cause">Test automation</div>
+    <div class="dt-domino-arr">→</div>
+    <div class="dt-domino-effects">
+      <span class="dt-domino-effect">↓ regressions</span>
+      <span class="dt-domino-effect">↑ confidence</span>
+      <span class="dt-domino-effect">more frequent deployments</span>
+    </div>
+  </div>
+  <div class="dt-domino-row fragment">
+    <div class="dt-domino-cause">Centralised monitoring</div>
+    <div class="dt-domino-arr">→</div>
+    <div class="dt-domino-effects">
+      <span class="dt-domino-effect">debug 5× faster</span>
+      <span class="dt-domino-effect">↓ dependency on experts</span>
+      <span class="dt-domino-effect">↑ onboarding</span>
+    </div>
+  </div>
+</div>
+<p class="dt-appr-kpi fragment">Fix what improves everything else — the most strategic angle</p>
+<table class="dt-audience">
+  <thead><tr><th>Logic</th><th>Who it speaks to most</th><th>What they care about</th></tr></thead>
+  <tbody>
+    <tr><td>Dependencies</td><td>Architects, Release Managers, Tech Leads, Integration Leads</td><td>Delivery sequencing, deployment stability, avoiding cascading failures</td></tr>
+    <tr><td>Production risk</td><td>Support teams, Operations, Platform Owners, CIO/CTO, Service Owners</td><td>Incidents, outages, data corruption, business continuity</td></tr>
+    <tr><td>ROI / hidden cost</td><td>Product Owners, Delivery Managers, PMO, Finance, Engineering Managers</td><td>Team productivity, delivery speed, operational cost, wasted effort</td></tr>
+    <tr><td>Strategic blocker</td><td>Enterprise Architects, Transformation Leads, Executives, Business Sponsors</td><td>Ability to launch new capabilities, scalability, roadmap execution</td></tr>
+    <tr class="dt-aud-active" style="--aud-accent:#7C3AED"><td>Domino effect</td><td>Senior Architects, Technical Leads, Platform Owners</td><td>Maximum architectural leverage, simplification, reducing systemic complexity</td></tr>
+  </tbody>
+</table>
+      </section>
+      <section>
+<div class="bloc-center" id="bloc4">
+  <div class="bloc-num">Part 4 of 5</div>
+  <h1>Map and Act</h1>
+  <p class="bloc-sub">Two approaches depending on your context — then build for the long term</p>
+  <div class="pills">
+    <span class="pill">2 approaches</span>
+    <span class="pill">Boy Scout</span>
+    <span class="pill">4-phase Roadmap</span>
+  </div>
+</div>
+      </section>
+      <section>
+<h2>Two Approaches — Pick Your Context</h2>
+<div class="dt-approaches">
+  <div class="dt-approach fragment">
+    <div class="dt-approach-hdr crisis">
+      <span class="dt-approach-icon">🚨</span>
+      <div>
+        <div class="dt-approach-name">Approach 1 — The Big Detox</div>
+        <div class="dt-approach-ctx">For orgs in critical condition</div>
+      </div>
+    </div>
+    <div class="dt-approach-body">
+      <ul>
+        <li><span class="dt-item-check">✓</span> Full audit <span class="dt-item-detail">(1–3 months)</span></li>
+        <li><span class="dt-item-check">✓</span> Sprints dedicated exclusively to debt</li>
+        <li><span class="dt-item-check">✓</span> Resume features afterwards</li>
+      </ul>
+      <div class="dt-approach-footer">
+        <span class="dt-tag dt-tag--ok">Effective if critical</span>
+        <span class="dt-tag dt-tag--ko">Hard to sell</span>
+        <span class="dt-tag dt-tag--ko">Regression risk</span>
+      </div>
+    </div>
+  </div>
+  <div class="dt-approach fragment">
+    <div class="dt-approach-hdr continuous">
+      <span class="dt-approach-icon">♻️</span>
+      <div>
+        <div class="dt-approach-name">Approach 2 — Integrated into Delivery <span class="dt-recommended-badge">Recommended</span></div>
+        <div class="dt-approach-ctx">For active teams in good health</div>
+      </div>
+    </div>
+    <div class="dt-approach-body">
+      <ul>
+        <li><span class="dt-item-check">✓</span> Targeted audit — critical risks first</li>
+        <li><span class="dt-item-check">✓</span> Production emergencies addressed immediately</li>
+        <li><span class="dt-item-check">✓</span> 10–20% of each sprint <span class="dt-item-detail">dedicated to debt</span></li>
+        <li><span class="dt-item-check">✓</span> Major refactors planned separately</li>
+        <li><span class="dt-item-check">✓</span> Sustainable governance — standards, KPIs</li>
+      </ul>
+      <div class="dt-approach-footer">
+        <span class="dt-tag dt-tag--ok">Less risky</span>
+        <span class="dt-tag dt-tag--ok">Sustainable</span>
+        <span class="dt-tag dt-tag--ok">Accepted by management</span>
+      </div>
+    </div>
+  </div>
+</div>
+<p class="dt-recommend fragment">⚖️ &nbsp;<strong>Golden rule:</strong> fix what slows teams down, puts production at risk, or prevents the business from evolving. Ignore cosmetic debt with no real ROI.</p>
+      </section>
+      <section>
+<h2>The Boy Scout Rule</h2>
+<div class="dt-scout-quote">
+  &ldquo;Leave the camp cleaner than you found it.&rdquo;
+  <span class="dt-scout-cite">— Robert Martin, adapted to code</span>
+</div>
+<div class="dt-scout-steps">
+  <div class="dt-scout-step dt-scout-step--doc fragment" data-fragment-index="0">
+    <div class="dt-scout-num">Step 1</div>
+    <div class="dt-scout-icon">📝</div>
+    <div class="dt-scout-label">Document</div>
+    <div class="dt-scout-desc">The area you just touched — if it&rsquo;s not done, do it now</div>
+  </div>
+  <div class="dt-scout-step dt-scout-step--remove fragment" data-fragment-index="0">
+    <div class="dt-scout-num">Step 2</div>
+    <div class="dt-scout-icon">🗑️</div>
+    <div class="dt-scout-label">Remove</div>
+    <div class="dt-scout-desc">What is clearly unnecessary in the touched scope</div>
+  </div>
+  <div class="dt-scout-step dt-scout-step--fix fragment" data-fragment-index="0">
+    <div class="dt-scout-num">Step 3</div>
+    <div class="dt-scout-icon">🔧</div>
+    <div class="dt-scout-label">Fix</div>
+    <div class="dt-scout-desc">One minor problem identified &ldquo;while passing&rdquo;</div>
+  </div>
+</div>
+<div class="dt-scout-why">
+  <span class="dt-scout-pill fragment" data-fragment-index="1">💰 No dedicated budget</span>
+  <span class="dt-scout-pill fragment" data-fragment-index="1">🤝 No management approval needed</span>
+  <span class="dt-scout-pill fragment" data-fragment-index="1">🌱 Progressively, invisibly, sustainably</span>
+</div>
+<div class="dt-scout-tip fragment" data-fragment-index="2">
+  🏕️ &nbsp;<strong>One rule:</strong> don&rsquo;t clean everything you see. Just what you touch.
+</div>
+      </section>
+      <section>
+<h2>Remediation Roadmap — 4 Phases</h2>
+<p style="font-size:0.72em;color:#475569;margin-bottom:6px;font-style:italic;">"A mature technical debt strategy starts with measurement, not refactoring."</p>
+<div class="dt-rpm-timeline">
+  <div class="dt-rpm-tphase fragment">
+    <div class="dt-rpm-dot dt-rpm-dot--1">📍</div>
+    <div class="dt-rpm-tname">Phase 1<br>Discovery</div>
+    <div class="dt-rpm-ttime">Wk 1–2</div>
+  </div>
+  <div class="dt-rpm-tphase fragment">
+    <div class="dt-rpm-dot dt-rpm-dot--2">⚡</div>
+    <div class="dt-rpm-tname">Phase 2<br>Quick Wins</div>
+    <div class="dt-rpm-ttime">Wk 3–6</div>
+  </div>
+  <div class="dt-rpm-tphase fragment">
+    <div class="dt-rpm-dot dt-rpm-dot--3">🧹</div>
+    <div class="dt-rpm-tname">Phase 3<br>Rationalisation</div>
+    <div class="dt-rpm-ttime">Month 2–3</div>
+  </div>
+  <div class="dt-rpm-tphase fragment">
+    <div class="dt-rpm-dot dt-rpm-dot--4">🚀</div>
+    <div class="dt-rpm-tname">Phase 4<br>Transformation</div>
+    <div class="dt-rpm-ttime">Month 3+</div>
+  </div>
+</div>
+      </section>
+      <section>
+<h2>📍 Phase 1 — Discovery &amp; Mapping <span style="font-size:0.65em;color:#64748B;font-weight:400">Wk 1–2</span></h2>
+<div class="dt-rpm-progress">
+  <div class="dt-rpm-pdot dt-rpm-pdot--active">1</div>
+  <div class="dt-rpm-pline dt-rpm-pline--next"></div>
+  <div class="dt-rpm-pdot dt-rpm-pdot--next">2</div>
+  <div class="dt-rpm-pline dt-rpm-pline--next"></div>
+  <div class="dt-rpm-pdot dt-rpm-pdot--next">3</div>
+  <div class="dt-rpm-pline dt-rpm-pline--next"></div>
+  <div class="dt-rpm-pdot dt-rpm-pdot--next">4</div>
+</div>
+<div class="dt-rpm-phase-wrap dt-rpm-ph1">
+  <div class="dt-rpm-col">
+    <div class="dt-rpm-col-hdr dt-rpm-col-hdr--obj">🎯 Objective</div>
+    <div class="dt-rpm-col-body">
+      <div class="dt-rpm-obj">Understand the actual state of the org and identify complexity zones <strong>before</strong> touching anything.</div>
+    </div>
+  </div>
+  <div class="dt-rpm-col">
+    <div class="dt-rpm-col-hdr dt-rpm-col-hdr--tool">🔧 Tools</div>
+    <div class="dt-rpm-col-body">
+      <div class="dt-rpm-tool" style="--td:0.10s">Salesforce Optimizer</div>
+      <div class="dt-rpm-tool" style="--td:0.25s">Scale Center</div>
+      <div class="dt-rpm-tool" style="--td:0.40s">Health Check</div>
+      <div class="dt-rpm-tool" style="--td:0.55s">Dev Console / SOQL</div>
+      <div class="dt-rpm-tool" style="--td:0.70s">Setup Audit Trail</div>
+      <div class="dt-rpm-tool" style="--td:0.85s">Event Monitoring</div>
+    </div>
+  </div>
+  <div class="dt-rpm-col">
+    <div class="dt-rpm-col-hdr dt-rpm-col-hdr--del">✅ Deliverables</div>
+    <div class="dt-rpm-col-body">
+      <div class="dt-rpm-del">Global debt map</div>
+      <div class="dt-rpm-del">Top risks &amp; critical zones identified</div>
+    </div>
+  </div>
+</div>
+      </section>
+      <section>
+<h2>⚡ Phase 2 — Stabilisation &amp; Quick Wins <span style="font-size:0.65em;color:#64748B;font-weight:400">Wk 3–6</span></h2>
+<div class="dt-rpm-progress">
+  <div class="dt-rpm-pdot dt-rpm-pdot--done">✓</div>
+  <div class="dt-rpm-pline dt-rpm-pline--done"></div>
+  <div class="dt-rpm-pdot dt-rpm-pdot--active2">2</div>
+  <div class="dt-rpm-pline dt-rpm-pline--next"></div>
+  <div class="dt-rpm-pdot dt-rpm-pdot--next">3</div>
+  <div class="dt-rpm-pline dt-rpm-pline--next"></div>
+  <div class="dt-rpm-pdot dt-rpm-pdot--next">4</div>
+</div>
+<div class="dt-rpm-phase-wrap dt-rpm-ph2">
+  <div class="dt-rpm-col">
+    <div class="dt-rpm-col-hdr dt-rpm-col-hdr--obj">🎯 Objective</div>
+    <div class="dt-rpm-col-body">
+      <div class="dt-rpm-obj">Quickly reduce visible complexity and improve stability — measurable before/after gains.</div>
+    </div>
+  </div>
+  <div class="dt-rpm-col">
+    <div class="dt-rpm-col-hdr dt-rpm-col-hdr--tool">🔧 Tools</div>
+    <div class="dt-rpm-col-body">
+      <div class="dt-rpm-tool" style="--td:0.10s">Debug Logs</div>
+      <div class="dt-rpm-tool" style="--td:0.25s">Lightning Usage App</div>
+      <div class="dt-rpm-tool" style="--td:0.40s">Flow Analyzer</div>
+      <div class="dt-rpm-tool" style="--td:0.55s">PMD / SonarQube</div>
+      <div class="dt-rpm-tool" style="--td:0.70s">Metadata API</div>
+    </div>
+  </div>
+  <div class="dt-rpm-col">
+    <div class="dt-rpm-col-hdr dt-rpm-col-hdr--del">✅ Deliverables</div>
+    <div class="dt-rpm-col-body">
+      <div class="dt-rpm-del">Measurable before/after gains</div>
+      <div class="dt-rpm-del">Reduction in critical alerts</div>
+    </div>
+  </div>
+</div>
+      </section>
+      <section>
+<h2>🧹 Phase 3 — Structural Rationalisation <span style="font-size:0.65em;color:#64748B;font-weight:400">Month 2–3</span></h2>
+<div class="dt-rpm-progress">
+  <div class="dt-rpm-pdot dt-rpm-pdot--done">✓</div>
+  <div class="dt-rpm-pline dt-rpm-pline--done"></div>
+  <div class="dt-rpm-pdot dt-rpm-pdot--done">✓</div>
+  <div class="dt-rpm-pline dt-rpm-pline--done"></div>
+  <div class="dt-rpm-pdot dt-rpm-pdot--active3">3</div>
+  <div class="dt-rpm-pline dt-rpm-pline--next"></div>
+  <div class="dt-rpm-pdot dt-rpm-pdot--next">4</div>
+</div>
+<div class="dt-rpm-phase-wrap dt-rpm-ph3">
+  <div class="dt-rpm-col">
+    <div class="dt-rpm-col-hdr dt-rpm-col-hdr--obj">🎯 Objective</div>
+    <div class="dt-rpm-col-body">
+      <div class="dt-rpm-obj">Sustainably simplify the architecture and reduce cognitive load — the system becomes understandable.</div>
+    </div>
+  </div>
+  <div class="dt-rpm-col">
+    <div class="dt-rpm-col-hdr dt-rpm-col-hdr--tool">🔧 Tools</div>
+    <div class="dt-rpm-col-body">
+      <div class="dt-rpm-tool" style="--td:0.10s">Dependency API</div>
+      <div class="dt-rpm-tool" style="--td:0.25s">Org Browser</div>
+      <div class="dt-rpm-tool" style="--td:0.40s">Schema Builder</div>
+      <div class="dt-rpm-tool" style="--td:0.55s">CI/CD Metrics</div>
+      <div class="dt-rpm-tool" style="--td:0.70s">Repository Analysis</div>
+    </div>
+  </div>
+  <div class="dt-rpm-col">
+    <div class="dt-rpm-col-hdr dt-rpm-col-hdr--del">✅ Deliverables</div>
+    <div class="dt-rpm-col-body">
+      <div class="dt-rpm-del">Reduced structural complexity</div>
+      <div class="dt-rpm-del">Standards &amp; governance clarified</div>
+    </div>
+  </div>
+</div>
+      </section>
+      <section>
+<h2>🚀 Phase 4 — Strategic Transformation <span style="font-size:0.65em;color:#64748B;font-weight:400">Month 3+</span></h2>
+<div class="dt-rpm-progress">
+  <div class="dt-rpm-pdot dt-rpm-pdot--done">✓</div>
+  <div class="dt-rpm-pline dt-rpm-pline--done"></div>
+  <div class="dt-rpm-pdot dt-rpm-pdot--done">✓</div>
+  <div class="dt-rpm-pline dt-rpm-pline--done"></div>
+  <div class="dt-rpm-pdot dt-rpm-pdot--done">✓</div>
+  <div class="dt-rpm-pline dt-rpm-pline--done"></div>
+  <div class="dt-rpm-pdot dt-rpm-pdot--active4">4</div>
+</div>
+<div class="dt-rpm-phase-wrap dt-rpm-ph4">
+  <div class="dt-rpm-col">
+    <div class="dt-rpm-col-hdr dt-rpm-col-hdr--obj">🎯 Objective</div>
+    <div class="dt-rpm-col-body">
+      <div class="dt-rpm-obj">Make debt management a lever for continuous transformation — governance, ROI, Agentforce.</div>
+    </div>
+  </div>
+  <div class="dt-rpm-col">
+    <div class="dt-rpm-col-hdr dt-rpm-col-hdr--tool">🔧 Tools</div>
+    <div class="dt-rpm-col-body">
+      <div class="dt-rpm-tool" style="--td:0.10s">DevOps Center</div>
+      <div class="dt-rpm-tool" style="--td:0.25s">KPI Dashboards</div>
+      <div class="dt-rpm-tool" style="--td:0.40s">Architecture Decision Records</div>
+      <div class="dt-rpm-tool" style="--td:0.55s">AI-assisted Analysis</div>
+      <div class="dt-rpm-tool" style="--td:0.70s">Enterprise Architecture Mapping</div>
+    </div>
+  </div>
+  <div class="dt-rpm-col">
+    <div class="dt-rpm-col-hdr dt-rpm-col-hdr--del">✅ Deliverables</div>
+    <div class="dt-rpm-col-body">
+      <div class="dt-rpm-del">Prioritised strategic roadmap</div>
+      <div class="dt-rpm-del">Continuous platform health monitoring</div>
+    </div>
+  </div>
+</div>
+      </section>
+      <section>
+<div class="bloc-center" id="bloc5">
+  <div class="bloc-num">Part 5 — Optional</div>
+  <h1>Diagnostic Tools</h1>
+  <p class="bloc-sub">Native, free, available now — if time allows</p>
+  <div class="pills">
+    <span class="pill">Removal order</span>
+    <span class="pill">Scale Center</span>
+    <span class="pill">Essential SOQL</span>
+  </div>
+</div>
+      </section>
+      <section>
+<h2>The Removal Order — Important!</h2>
+<p style="font-size:0.75em;color:#EF4444;margin-bottom:10px;font-weight:600;">⚠️ Salesforce enforces strict dependencies — delete in the wrong order = guaranteed error.</p>
+<div class="dt-order">
+  <div class="dt-order-step fragment">
+    <div class="dt-order-num">1</div>
+    <div class="dt-order-content"><strong>Automations</strong><span>Inactive Flows, Process Builders, Workflow Rules</span></div>
+    <div class="dt-order-why">They reference everything else</div>
+  </div>
+  <div class="dt-order-arrow fragment">▼</div>
+  <div class="dt-order-step fragment">
+    <div class="dt-order-num">2</div>
+    <div class="dt-order-content"><strong>Layouts &amp; Components</strong><span>Page Layouts, Visualforce Pages, Quick Actions</span></div>
+    <div class="dt-order-why">Reference the fields</div>
+  </div>
+  <div class="dt-order-arrow fragment">▼</div>
+  <div class="dt-order-step fragment">
+    <div class="dt-order-num">3</div>
+    <div class="dt-order-content"><strong>Business Customization</strong><span>Unused Apex classes, unused Flows</span></div>
+    <div class="dt-order-why">No longer referenced — safe to remove</div>
+  </div>
+  <div class="dt-order-arrow fragment">▼</div>
+  <div class="dt-order-step fragment">
+    <div class="dt-order-num">4</div>
+    <div class="dt-order-content"><strong>Custom Objects</strong><span>Unused objects</span></div>
+    <div class="dt-order-why">The final boss</div>
+  </div>
+  <div class="dt-order-arrow fragment">▼</div>
+  <div class="dt-order-step fragment">
+    <div class="dt-order-num">5</div>
+    <div class="dt-order-content"><strong>Custom Fields</strong><span>After all dependencies have been lifted</span></div>
+    <div class="dt-order-why">The most satisfying moment 😌</div>
+  </div>
+</div>
+<span class="fragment" data-af-step="1" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
+<span class="fragment" data-af-step="2" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
+<span class="fragment" data-af-step="3" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
+<span class="fragment" data-af-step="4" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
+<span class="fragment" data-af-step="5" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
+<span class="fragment" data-af-step="6" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
+      </section>
+      <section data-markdown>
+<textarea data-template>
+## Scale Center — The Performance Radar
+
+**Direct access:** `Setup > Scale Center` — free, native, 0 installation
+
+### What Scale Center Detects Automatically
+
+- ⚡ **SOQL without index** on large tables → timeouts in prod
+- 🔁 **DML loops** in Apex triggers → errors at volume
+- 📊 **Queries > 50,000 records** → governor limits
+- 🐌 **Page loads > 5s** → users dropping off
+
+### What It Doesn't Do
+
+Scale Center **points to the problem**, it doesn't fix anything. It's your radar, not your autopilot.
+
+> Only **5% of orgs** check Scale Center regularly.
+> The remaining 95% discover problems... in production.
+      </textarea>
+<span class="fragment" data-popup-show="scalecenter-stats" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
+<span class="fragment" data-popup-expand="scalecenter-stats" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
+<span class="fragment" data-popup-close="scalecenter-stats" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span></section>
+      <section data-markdown>
+<textarea data-template>
+## Diagnostic SOQL — 3 Essential Queries
+
+**Fields never populated (Tooling API)**
+
+```sql
+SELECT QualifiedApiName, Label, DataType
+FROM FieldDefinition
+WHERE EntityDefinition.QualifiedApiName = 'Opportunity'
+  AND IsCalculated = false
+```
+
+**Inactive Flows to delete**
+
+```sql
+SELECT Id, Label, ProcessType, Status, LastModifiedDate
+FROM Flow WHERE Status IN ('Obsolete','Draft')
+ORDER BY LastModifiedDate ASC
+```
+
+**Apex with insufficient coverage**
+
+```sql
+SELECT ApexClassOrTrigger.Name, NumLinesCovered, NumLinesUncovered
+FROM ApexCodeCoverageAggregate
+ORDER BY NumLinesUncovered DESC LIMIT 20
+```
+      </textarea>
+<span class="fragment" data-popup-show="soql-warning" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
+<span class="fragment" data-popup-close="soql-warning" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span></section>
+      <section style="padding: 10px 20px;">
+<h2 style="font-size:0.88em;margin-bottom:10px;">How to Analyse Field Usage Properly</h2>
+<iframe id="iframe-fillrate" src="field-fillrate.html"
+  style="width:100%; height:640px; border:none; border-radius:4px;
+         transform:scale(0.92); transform-origin:top center; margin-bottom:-52px;">
+</iframe>
+<span class="fragment" data-iframe-msg="ff-step-1" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
+<span class="fragment" data-iframe-msg="ff-step-2" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
+      </section>
+      <section style="padding: 6px 20px;">
+<h2 style="font-size:0.88em;margin-bottom:8px;">Review user permissions</h2>
+<iframe src="user-access-score.html"
+  style="width:100%; height:660px; border:none; border-radius:4px;
+         transform:scale(0.90); transform-origin:top center; margin-bottom:-66px; display:block;">
+</iframe>
+      </section>
+      <section>
+<h2>5 Key Takeaways</h2>
+<div class="dt-takeaways">
+  <div class="dt-takeaway fragment">
+    <div class="dt-takeaway-num">1</div>
+    <div class="dt-takeaway-text"><strong>Debt is inevitable</strong> — but letting it accumulate is a conscious choice.</div>
+  </div>
+  <div class="dt-takeaway fragment">
+    <div class="dt-takeaway-num">2</div>
+    <div class="dt-takeaway-text"><strong>The cost of inaction is greater</strong> than the cost of fixing — it's just less visible.</div>
+  </div>
+  <div class="dt-takeaway fragment">
+    <div class="dt-takeaway-num">3</div>
+    <div class="dt-takeaway-text"><strong>Adapt your message to the audience</strong> — dev, PO, management, client do not have the same motivation system.</div>
+  </div>
+  <div class="dt-takeaway fragment">
+    <div class="dt-takeaway-num">4</div>
+    <div class="dt-takeaway-text"><strong>The Impact × Cost matrix</strong> is your prioritisation tool — only fix what is worth it.</div>
+  </div>
+  <div class="dt-takeaway fragment">
+    <div class="dt-takeaway-num">5</div>
+    <div class="dt-takeaway-text"><strong>Debt blocks Agentforce</strong> — this is the strategic argument for 2025-2026. Without governance, every AI prompt generates new debt.</div>
+  </div>
+</div>
+<span class="fragment" data-popup-show="defi-lundi" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
+<span class="fragment" data-popup-expand="defi-lundi" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
+<span class="fragment" data-popup-close="defi-lundi" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
+      </section>
+      <section>
+<div class="dt-fin">
+  <h2 style="border:none;color:#D97706;font-size:1.5em;margin-bottom:8px;">Where to Start Monday Morning?</h2>
+  <div class="dt-fin-steps">
+    <div class="dt-fin-step">
+      <span class="dt-fin-num">1</span>
+      <span class="dt-fin-action">Open <code>Setup &gt; Scale Center</code></span>
+      <span class="dt-fin-time">30 min</span>
+    </div>
+    <div class="dt-fin-step">
+      <span class="dt-fin-num">2</span>
+      <span class="dt-fin-action">Run <strong>Salesforce Optimizer</strong></span>
+      <span class="dt-fin-time">30 min</span>
+    </div>
+    <div class="dt-fin-step">
+      <span class="dt-fin-num">3</span>
+      <span class="dt-fin-action">Run the SOQL query for unused custom fields</span>
+      <span class="dt-fin-time">10 min</span>
+    </div>
+  </div>
+  <div class="dt-fin-result">A first mapping in <strong>less than an hour</strong>.</div>
+  <div class="dt-fin-resources">
+    <strong>Resources:</strong> Scale Center · Apex Guru · Flow Scanner (GitHub) · Salesforce CLI · elements.cloud
+  </div>
+  <div class="dt-fin-question">❓ Questions?</div>
+</div>
+      </section>
+      <section class="lc-title">
+<div class="lc-tw">
+  <img class="lc-tw-logo"     src="assets/london/image3.png" alt="London's Calling">
+  <img class="lc-tw-sponsors" src="assets/london/image2.png" alt="Sponsors">
+  <img class="lc-tw-skyline"  src="assets/london/image1.png" alt="London skyline">
+  <div class="lc-tw-title">
+    Q&amp;A
+    <span class="lc-tw-subtitle">Any questions?</span>
+  </div>
+  <div class="lc-tw-divider"></div>
+  <div class="lc-tw-speaker">
+    <strong>Fabrice Challier</strong>
+    Salesforce Technical Architect · London's Calling 2026
+  </div>
+</div>
+      </section>
+      <section class="lc-title">
+<div class="lc-tw">
+  <img class="lc-tw-logo"     src="assets/london/image3.png" alt="London's Calling">
+  <img class="lc-tw-sponsors" src="assets/london/image2.png" alt="Sponsors">
+  <img class="lc-tw-skyline"  src="assets/london/image1.png" alt="London skyline">
+  <div class="lc-tw-title">
+    Thank You!
+    <span class="lc-tw-subtitle">Thank You · London's Calling 2026</span>
+  </div>
+  <div class="lc-tw-divider"></div>
+  <div class="lc-tw-speaker">
+    <strong>Fabrice Challier</strong>
+    fabricechallier@gmail.com
+  </div>
+</div>
+      </section>
+    </div>
+    <div id="frag-indicator">✱</div>
+  </div>
+
+  <!-- Popups -->
+<div id="def-ward" class="popup-overlay" style="position:fixed; top:24px; right:32px; background:#FEF3C7; border:2px solid #D97706; border-radius:10px; padding:14px 32px 14px 22px; color:#92400E; font-size:21px; z-index:999; box-shadow:0 4px 16px rgba(0,0,0,0.18); max-width:360px; line-height:1.7;">
+  <button onclick="hidePopup('def-ward')" style="position:absolute;top:6px;right:8px;background:none;border:none;cursor:pointer;font-size:23px;color:#92400E;opacity:0.5;line-height:1;" title="Fermer">&#x2715;</button>
+  <div class="popup-teaser">
+    🧠 <strong>Ward Cunningham</strong> also invented the Wiki.<br>
+If you see the connection with Salesforce documentation, that's intentional.
+    <span class="popup-more-hint" style="font-size:0.72em;opacity:0.55;display:block;margin-top:5px;">&#9654; more on next click</span>
+  </div>
+  <div id="def-ward-body" class="popup-body" style="display:none">His original metaphor: technical debt is like borrowing money.<br>
+You can go fast <em>now</em>,<br>
+but you'll pay <strong>interest every month</strong>.<br>
+Until repayment... or bankruptcy.</div>
+</div>
+
+<!-- ── AI Argument Generator popup ── -->
+<div id="popup-ai">
+  <div class="ai-popup-header">
+    <span style="font-size:1.4em">🤖</span>
+    <span class="ai-popup-title">AI Argument Generator — Technical Debt Edition</span>
+    <button class="ai-popup-close" onclick="closeAIPopup()">✕</button>
+  </div>
+  <div class="ai-popup-selector">
+    <div class="ai-popup-selector-label">Who do you need to convince?</div>
+    <div class="ai-popup-btns">
+      <button class="ai-arg-btn" data-target="dev"  onclick="showAIArg('dev')">👨‍💻 Developer</button>
+      <button class="ai-arg-btn" data-target="po"   onclick="showAIArg('po')">📋 Product Owner</button>
+      <button class="ai-arg-btn" data-target="mgmt" onclick="showAIArg('mgmt')">💼 Management</button>
+      <button class="ai-arg-btn" data-target="user" onclick="showAIArg('user')">🎯 End User</button>
+    </div>
+  </div>
+  <div class="ai-popup-response" id="ai-arg-response">
+    <em style="color:#94A3B8">← Select a profile to generate a perfectly crafted argument 🌸</em>
+  </div>
+  <div class="ai-popup-footer">⚠️ This AI has an unexplained obsession with cookies 🍪 and flowers 🌸. Anthropic is investigating.</div>
+</div>
+
+<!-- ── Modaux 7 types ── -->
+<div id="modal-automation" class="dt-modal-backdrop" onclick="if(event.target===this)closeTypeModal('modal-automation')">
+  <div class="dt-modal">
+    <button class="dt-modal-close" onclick="closeTypeModal('modal-automation')">&#x2715;</button>
+    <div class="dt-modal-header"><span class="dt-modal-icon">⚙️</span><span class="dt-modal-title">Automation Debt</span></div>
+    <div class="dt-modal-oneliner">Overlapping automations that nobody dares to touch.</div>
+    <div class="dt-modal-section"><div class="dt-modal-section-title">When you see it</div>
+      <ul class="dt-modal-list">
+        <li>A record update triggers the same email twice</li>
+        <li>A Flow fails with <code>CANNOT_INSERT_UPDATE_ACTIVATE_ENTITY</code> — recursive trigger</li>
+        <li>Disabling one Process Builder breaks something completely unrelated</li>
+        <li>Nobody knows which automation runs first</li>
+      </ul>
+    </div>
+    <div class="dt-modal-section"><div class="dt-modal-section-title">How to address it</div>
+      <ul class="dt-modal-list dt-modal-list--fix">
+        <li>Audit with Salesforce Optimizer + Flow list view — map all automations per object</li>
+        <li>Enforce one entry-point Flow per object per trigger context (before / after save)</li>
+        <li>Retire Process Builders and Workflow Rules — migrate into record-triggered Flows</li>
+        <li>Document execution order inline in Flow descriptions</li>
+      </ul>
+    </div>
+    <div class="dt-modal-section"><div class="dt-modal-section-title">Key concepts</div>
+      <div class="dt-modal-tags">
+        <span class="dt-modal-tag">Record-Triggered Flow</span><span class="dt-modal-tag">Process Builder migration</span><span class="dt-modal-tag">execution order</span><span class="dt-modal-tag">recursive trigger</span><span class="dt-modal-tag">governor limits</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="modal-architecture" class="dt-modal-backdrop" onclick="if(event.target===this)closeTypeModal('modal-architecture')">
+  <div class="dt-modal">
+    <button class="dt-modal-close" onclick="closeTypeModal('modal-architecture')">&#x2715;</button>
+    <div class="dt-modal-header"><span class="dt-modal-icon">🏗️</span><span class="dt-modal-title">Architecture Debt</span></div>
+    <div class="dt-modal-oneliner">Design decisions that were made without a target architecture — and now constrain the whole Salesforce ecosystem.</div>
+    <div class="dt-modal-section"><div class="dt-modal-section-title">When you see it</div>
+      <ul class="dt-modal-list">
+        <li>Multiple systems update the same Salesforce record with no clear system of record</li>
+        <li>Integrations are point-to-point instead of going through a controlled integration layer</li>
+        <li>A small change in Salesforce unexpectedly breaks another system</li>
+        <li>The same capability is rebuilt several times by different teams</li>
+      </ul>
+    </div>
+    <div class="dt-modal-section"><div class="dt-modal-section-title">How to address it</div>
+      <ul class="dt-modal-list dt-modal-list--fix">
+        <li>Define explicit system-of-record ownership per domain</li>
+        <li>Introduce standardized API-first or event-driven integration patterns</li>
+        <li>Reduce coupling and document dependencies between systems</li>
+        <li>Create reusable reference architectures and shared components</li>
+      </ul>
+    </div>
+    <div class="dt-modal-section"><div class="dt-modal-section-title">Key concepts</div>
+      <div class="dt-modal-tags">
+        <span class="dt-modal-tag">system of record</span><span class="dt-modal-tag">API-first</span><span class="dt-modal-tag">event-driven</span><span class="dt-modal-tag">integration layer</span><span class="dt-modal-tag">coupling</span><span class="dt-modal-tag">reference architecture</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="modal-datamodel" class="dt-modal-backdrop" onclick="if(event.target===this)closeTypeModal('modal-datamodel')">
+  <div class="dt-modal">
+    <button class="dt-modal-close" onclick="closeTypeModal('modal-datamodel')">&#x2715;</button>
+    <div class="dt-modal-header"><span class="dt-modal-icon">📊</span><span class="dt-modal-title">Data Model Debt</span></div>
+    <div class="dt-modal-oneliner">Fields and picklists that have outlived their usefulness — and nobody knows which ones.</div>
+    <div class="dt-modal-section"><div class="dt-modal-section-title">When you see it</div>
+      <ul class="dt-modal-list">
+        <li>Picklist reports show 15 variations of what should be 3 values</li>
+        <li>Page layouts so crowded that users scroll past the fields they need</li>
+        <li>Nobody can safely delete a field without a full dependency check</li>
+        <li>Dashboards vary wildly depending on which status field you use</li>
+      </ul>
+    </div>
+    <div class="dt-modal-section"><div class="dt-modal-section-title">How to address it</div>
+      <ul class="dt-modal-list dt-modal-list--fix">
+        <li>Field Usage Analytics (Setup): fields with zero population are safe candidates</li>
+        <li>Standardize picklist values — define a canonical list, use Global Value Sets</li>
+        <li>Establish a "create field" process: description, owner, and review required</li>
+        <li>Use Field-Level Security to hide irrelevant fields rather than delete immediately</li>
+      </ul>
+    </div>
+    <div class="dt-modal-section"><div class="dt-modal-section-title">Key concepts</div>
+      <div class="dt-modal-tags">
+        <span class="dt-modal-tag">Field Usage Analytics</span><span class="dt-modal-tag">Global Value Sets</span><span class="dt-modal-tag">picklist governance</span><span class="dt-modal-tag">Field-Level Security</span><span class="dt-modal-tag">data quality</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="modal-apex" class="dt-modal-backdrop" onclick="if(event.target===this)closeTypeModal('modal-apex')">
+  <div class="dt-modal">
+    <button class="dt-modal-close" onclick="closeTypeModal('modal-apex')">&#x2715;</button>
+    <div class="dt-modal-header"><span class="dt-modal-icon">💻</span><span class="dt-modal-title">Apex Code Debt</span></div>
+    <div class="dt-modal-oneliner">Code that works today but will break tomorrow — and has no safety net.</div>
+    <div class="dt-modal-section"><div class="dt-modal-section-title">When you see it</div>
+      <ul class="dt-modal-list">
+        <li>A deployment fails because unrelated tests suddenly break</li>
+        <li>A new requirement means rewriting the trigger from scratch</li>
+        <li>A nightly batch fails in production after a data import</li>
+        <li>Nobody wants to modify the trigger — "it's too risky"</li>
+      </ul>
+    </div>
+    <div class="dt-modal-section"><div class="dt-modal-section-title">How to address it</div>
+      <ul class="dt-modal-list dt-modal-list--fix">
+        <li>Adopt the Trigger Handler pattern (fflib, Kevin O'Hara): one trigger per object</li>
+        <li>Write meaningful tests: assert specific field values and error conditions</li>
+        <li>Bulkify everything: SOQL and DML always outside loops — use collections and maps</li>
+        <li>Introduce a service layer to isolate business logic from trigger context</li>
+      </ul>
+    </div>
+    <div class="dt-modal-section"><div class="dt-modal-section-title">Key concepts</div>
+      <div class="dt-modal-tags">
+        <span class="dt-modal-tag">Trigger Handler pattern</span><span class="dt-modal-tag">bulkification</span><span class="dt-modal-tag">governor limits</span><span class="dt-modal-tag">test coverage</span><span class="dt-modal-tag">fflib</span><span class="dt-modal-tag">Apex Enterprise Patterns</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="modal-integration" class="dt-modal-backdrop" onclick="if(event.target===this)closeTypeModal('modal-integration')">
+  <div class="dt-modal">
+    <button class="dt-modal-close" onclick="closeTypeModal('modal-integration')">&#x2715;</button>
+    <div class="dt-modal-header"><span class="dt-modal-icon">🔗</span><span class="dt-modal-title">Integration Debt</span></div>
+    <div class="dt-modal-oneliner">External systems connected by fragile assumptions rather than solid contracts.</div>
+    <div class="dt-modal-section"><div class="dt-modal-section-title">When you see it</div>
+      <ul class="dt-modal-list">
+        <li>A sandbox refresh breaks several integrations immediately</li>
+        <li>An API version deprecation notice triggers emergency work across multiple teams</li>
+        <li>Failed syncs are discovered by end users, not by monitoring</li>
+        <li>Credentials stored as plaintext in custom fields or Apex constants</li>
+      </ul>
+    </div>
+    <div class="dt-modal-section"><div class="dt-modal-section-title">How to address it</div>
+      <ul class="dt-modal-list dt-modal-list--fix">
+        <li>Never hardcode Record IDs — use External IDs, Named Credentials, or Custom Metadata</li>
+        <li>Pin to a recent, stable API version — establish a yearly review process</li>
+        <li>Log failures to a custom object, alert via Platform Events or email</li>
+        <li>Use Named Credentials for all authentication — no credentials in code</li>
+        <li>Document every integration: source, target, trigger, frequency, owner</li>
+      </ul>
+    </div>
+    <div class="dt-modal-section"><div class="dt-modal-section-title">Key concepts</div>
+      <div class="dt-modal-tags">
+        <span class="dt-modal-tag">Named Credentials</span><span class="dt-modal-tag">External ID</span><span class="dt-modal-tag">API versioning</span><span class="dt-modal-tag">Platform Events</span><span class="dt-modal-tag">retry logic</span><span class="dt-modal-tag">outbound messaging</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="modal-governance" class="dt-modal-backdrop" onclick="if(event.target===this)closeTypeModal('modal-governance')">
+  <div class="dt-modal">
+    <button class="dt-modal-close" onclick="closeTypeModal('modal-governance')">&#x2715;</button>
+    <div class="dt-modal-header"><span class="dt-modal-icon">📋</span><span class="dt-modal-title">Governance Debt</span></div>
+    <div class="dt-modal-oneliner">An org where anyone can change anything, anytime, in any way they like.</div>
+    <div class="dt-modal-section"><div class="dt-modal-section-title">When you see it</div>
+      <ul class="dt-modal-list">
+        <li>Onboarding a new developer takes weeks just to understand the naming conventions</li>
+        <li>Two teams create near-identical custom fields because neither knew the other existed</li>
+        <li>A Flow is modified in production "just to test something quickly" — and breaks downstream</li>
+        <li>Setup audit trail shows dozens of unexplained changes per day from multiple admins</li>
+      </ul>
+    </div>
+    <div class="dt-modal-section"><div class="dt-modal-section-title">How to address it</div>
+      <ul class="dt-modal-list dt-modal-list--fix">
+        <li>Define and enforce naming conventions for all metadata — document in a living wiki</li>
+        <li>Make descriptions mandatory: no deployment without a description on every new element</li>
+        <li>Introduce a deployment pipeline: Sandbox → UAT → Production with change tracking</li>
+        <li>Use a CHANGELOG or Jira — every org change traceable to a request and a person</li>
+      </ul>
+    </div>
+    <div class="dt-modal-section"><div class="dt-modal-section-title">Key concepts</div>
+      <div class="dt-modal-tags">
+        <span class="dt-modal-tag">naming conventions</span><span class="dt-modal-tag">change management</span><span class="dt-modal-tag">Sandbox strategy</span><span class="dt-modal-tag">Setup Audit Trail</span><span class="dt-modal-tag">DevOps Center</span><span class="dt-modal-tag">Salesforce DX</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="modal-security" class="dt-modal-backdrop" onclick="if(event.target===this)closeTypeModal('modal-security')">
+  <div class="dt-modal">
+    <button class="dt-modal-close" onclick="closeTypeModal('modal-security')">&#x2715;</button>
+    <div class="dt-modal-header"><span class="dt-modal-icon">🔐</span><span class="dt-modal-title">Security Debt</span></div>
+    <div class="dt-modal-oneliner">The most dangerous type — because nothing breaks until it's too late.</div>
+    <div class="dt-modal-section"><div class="dt-modal-section-title">When you see it</div>
+      <ul class="dt-modal-list">
+        <li>Standard users can see or edit records they have no business reason to access</li>
+        <li>A Connected App from a vendor the company no longer works with is still active</li>
+        <li>A data leak can't be traced — audit trail history has already rolled over (180-day limit)</li>
+        <li>Sensitive fields (salary, SSN, contract value) are visible to all profiles</li>
+      </ul>
+    </div>
+    <div class="dt-modal-section"><div class="dt-modal-section-title">How to address it</div>
+      <ul class="dt-modal-list dt-modal-list--fix">
+        <li>Audit profiles and permission sets — use Strongpoint or Own Security scanner</li>
+        <li>Apply least privilege: start from zero access, grant only what is explicitly needed</li>
+        <li>Review Connected Apps quarterly — revoke any app unused for 90+ days</li>
+        <li>Restrict OAuth scopes — no app should request full API access unless required</li>
+        <li>Export Setup Audit Trail regularly — before the 180-day window rolls over</li>
+      </ul>
+    </div>
+    <div class="dt-modal-section"><div class="dt-modal-section-title">Key concepts</div>
+      <div class="dt-modal-tags">
+        <span class="dt-modal-tag">Permission Sets</span><span class="dt-modal-tag">least privilege</span><span class="dt-modal-tag">Connected Apps</span><span class="dt-modal-tag">OAuth scope</span><span class="dt-modal-tag">Field-Level Security</span><span class="dt-modal-tag">Setup Audit Trail</span><span class="dt-modal-tag">Shield Event Monitoring</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="agentforce-ironie" class="popup-overlay" style="position:fixed; top:24px; right:32px; background:#FFF7ED; border:2px solid #EA580C; border-radius:10px; padding:14px 32px 14px 22px; color:#7C2D12; font-size:21px; z-index:999; box-shadow:0 4px 16px rgba(0,0,0,0.18); max-width:380px; line-height:1.7;">
+  <button onclick="hidePopup('agentforce-ironie')" style="position:absolute;top:6px;right:8px;background:none;border:none;cursor:pointer;font-size:23px;color:#7C2D12;opacity:0.5;line-height:1;" title="Fermer">&#x2715;</button>
+  <div class="popup-teaser">
+    📨 <strong>Official notice from Agentforce:</strong><br>
+    Your activation request has been <strong>declined</strong>.<br>
+    <em style="font-size:0.88em">You can't ask an AI to understand data<br>that humans themselves no longer understand.</em>
+    <span class="popup-more-hint" style="font-size:0.72em;opacity:0.55;display:block;margin-top:5px;">&#9654; more on next click</span>
+  </div>
+  <div id="agentforce-ironie-body" class="popup-body" style="display:none">
+    <strong>Reasons for rejection:</strong><br>
+    &bull; 847 fields with no description <em>(we&rsquo;re confused)</em><br>
+    &bull; 12,493 duplicate Contacts <em>(trust issues)</em><br>
+    &bull; 1 Flow named &ldquo;FINAL_NEW_v3_COPY&rdquo; <em>(we&rsquo;re scared)</em><br><br>
+    We will try again when your org is ready.<br>
+    — <em>Agentforce HR Department 🤖</em><br><br>
+    <span style="font-size:0.82em;opacity:0.75"><em>P.S. It wants what your users want too. But somehow it sounds cooler to sell.</em></span>
+  </div>
+</div>
+
+<div id="scalecenter-stats" class="popup-overlay" style="position:fixed; bottom:24px; right:32px; background:#EFF6FF; border:2px solid #1D4ED8; border-radius:10px; padding:14px 32px 14px 22px; color:#1E3A8A; font-size:21px; z-index:999; box-shadow:0 4px 16px rgba(0,0,0,0.18); max-width:360px; line-height:1.7;">
+  <button onclick="hidePopup('scalecenter-stats')" style="position:absolute;top:6px;right:8px;background:none;border:none;cursor:pointer;font-size:23px;color:#1E3A8A;opacity:0.5;line-height:1;" title="Fermer">&#x2715;</button>
+  <div class="popup-teaser">
+    📊 Only <strong>5% of orgs</strong> use<br>Scale Center regularly.
+    <span class="popup-more-hint" style="font-size:0.72em;opacity:0.55;display:block;margin-top:5px;">&#9654; more on next click</span>
+  </div>
+  <div id="scalecenter-stats-body" class="popup-body" style="display:none">The remaining 95% discover it when<br>
+an external consultant looks at their org<br>
+and <strong>sighs deeply</strong>.<br><br>
+That sigh has a cost. It's called an "emergency audit".</div>
+</div>
+
+<div id="soql-warning" class="popup-overlay" style="position:fixed; top:24px; right:32px; background:#FFF7ED; border:2px solid #EA580C; border-radius:10px; padding:14px 32px 14px 22px; color:#7C2D12; font-size:21px; z-index:999; box-shadow:0 4px 16px rgba(0,0,0,0.18); max-width:360px; line-height:1.7;">
+  <button onclick="hidePopup('soql-warning')" style="position:absolute;top:6px;right:8px;background:none;border:none;cursor:pointer;font-size:23px;color:#7C2D12;opacity:0.5;line-height:1;" title="Fermer">&#x2715;</button>
+  ⚠️ These SOQL queries are <strong>read-only</strong>.<br>
+Do not attempt DELETE in Tooling API.<br>
+<em>No, really. Not in prod.</em>
+</div>
+
+<div id="defi-lundi" class="popup-overlay" style="position:fixed; bottom:24px; right:32px; background:#F0FDF4; border:2px solid #16A34A; border-radius:10px; padding:14px 32px 14px 22px; color:#14532D; font-size:21px; z-index:999; box-shadow:0 4px 16px rgba(0,0,0,0.18); max-width:360px; line-height:1.7;">
+  <button onclick="hidePopup('defi-lundi')" style="position:absolute;top:6px;right:8px;background:none;border:none;cursor:pointer;font-size:23px;color:#14532D;opacity:0.5;line-height:1;" title="Fermer">&#x2715;</button>
+  <div class="popup-teaser">
+    🎯 <strong>Scale Center Challenge:</strong><br>
+Open it before the end of the week.
+    <span class="popup-more-hint" style="font-size:0.72em;opacity:0.55;display:block;margin-top:5px;">&#9654; more on next click</span>
+  </div>
+  <div id="defi-lundi-body" class="popup-body" style="display:none">If you find <strong>0 problems</strong>:<br>
+your org is perfect. You can leave. 👏<br><br>
+If you find problems:<br>
+you have a plan. And you know where to start. ✅</div>
+</div>
+
+  <!-- View toggle -->
+  <button id="view-toggle" title="Toggle scroll / presentation view" style="
+    position:fixed; bottom:16px; right:16px; z-index:9999;
+    background:#1E293B; color:#E2E8F0; border:none; border-radius:8px;
+    padding:7px 13px; font-size:13px; font-family:'Segoe UI',Arial,sans-serif;
+    cursor:pointer; opacity:0.75; transition:opacity 0.2s;
+    display:flex; align-items:center; gap:6px;">
+    <span id="view-toggle-icon">☰</span>
+    <span id="view-toggle-label">Scroll view</span>
+  </button>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/markdown/markdown.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/notes/notes.js"></script>
+  <script>
+    const POPUPS = [
+    {id: "def-ward", slide: 4, hasMore: true},
+    {id: "agentforce-ironie", slide: 15, hasMore: true},
+    {id: "scalecenter-stats", slide: 34, hasMore: true},
+    {id: "soql-warning", slide: 35, hasMore: false},
+    {id: "defi-lundi", slide: 36, hasMore: true}
+    ];
+
+    Reveal.initialize({
+      hash: true,
+      slideNumber: 'c/t',
+      transition: 'slide',
+      width: 1280,
+      height: 720,
+      margin: 0,
+      plugins: [ RevealMarkdown, RevealHighlight, RevealNotes ]
+    });
+
+    // ── Masthead LC26 : barre rouge + logo, ancré dans .slides (top:0 du slide) ──
+    var _masthead = document.createElement('div');
+    _masthead.className = 'slide-masthead';
+    var _bar = document.createElement('div');
+    _bar.className = 'slide-masthead-bar';
+    var _logo = document.createElement('img');
+    _logo.src = 'assets/london/image3.png';
+    _logo.alt = "London's Calling";
+    _logo.className = 'slide-masthead-logo';
+    _masthead.appendChild(_bar);
+    _masthead.appendChild(_logo);
+    document.querySelector('.reveal .slides').appendChild(_masthead);
+
+    function _updateMasthead() {
+      var cur = Reveal.getCurrentSlide();
+      var special = cur && (cur.classList.contains('lc-title') || cur.classList.contains('pptx-cover'));
+      _masthead.style.display = special ? 'none' : 'block';
+    }
+    Reveal.on('ready', _updateMasthead);
+    Reveal.on('slidechanged', _updateMasthead);
+
+    // ── View toggle ───────────────────────────────────────────────────────
+    var scrollMode = false;
+    var btn = document.getElementById('view-toggle');
+    var btnIcon = document.getElementById('view-toggle-icon');
+    var btnLabel = document.getElementById('view-toggle-label');
+    btn.addEventListener('mouseenter', function() { btn.style.opacity = '1'; });
+    btn.addEventListener('mouseleave', function() { btn.style.opacity = '0.75'; });
+    btn.addEventListener('click', function() {
+      scrollMode = !scrollMode;
+      if (scrollMode) {
+        Reveal.configure({ view: 'scroll', scrollLayout: 'wide', scrollSnapping: 'none', fragments: false });
+        btnIcon.textContent = '▶';
+        btnLabel.textContent = 'Presentation view';
+      } else {
+        Reveal.configure({ view: undefined, fragments: true });
+        btnIcon.textContent = '☰';
+        btnLabel.textContent = 'Scroll view';
+      }
+    });
+
+    // ── Popup management ──────────────────────────────────────────────────
+    function _popupShow(id) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      var body = document.getElementById(id + '-body');
+      if (body) { body.style.display = 'none'; delete body.dataset.expanded; }
+      var hint = el.querySelector('.popup-more-hint');
+      if (hint) hint.style.display = '';
+      el.style.display = 'block';
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() { el.classList.add('popup-visible'); });
+      });
+    }
+
+    function _popupExpand(id) {
+      var body = document.getElementById(id + '-body');
+      if (!body || body.dataset.expanded) return;
+      body.dataset.expanded = '1';
+      body.style.display = 'block';
+      body.innerHTML = body.innerHTML.replace(
+        /(?<=>|^)([^<]+)(?=<|$)/g,
+        function(m) { return m.replace(/(\S+)/g, '<span class="tw">$1</span>'); }
+      );
+      body.querySelectorAll('.tw').forEach(function(s, i) {
+        setTimeout(function() { s.style.opacity = '1'; }, i * 28);
+      });
+      var hint = document.querySelector('#' + id + ' .popup-more-hint');
+      if (hint) hint.style.display = 'none';
+    }
+
+    function _popupCollapse(id) {
+      var body = document.getElementById(id + '-body');
+      if (body) { body.style.display = 'none'; delete body.dataset.expanded; }
+      var hint = document.querySelector('#' + id + ' .popup-more-hint');
+      if (hint) hint.style.display = '';
+    }
+
+    /* ── AI Argument popup ── */
+    var AI_ARGS = {
+      dev: '<div style="text-align:center;padding:18px 12px">'
+         + '<div style="font-size:1.8em;margin-bottom:10px">⚙️</div>'
+         + '<div style="font-weight:700;font-size:0.88em;margin-bottom:8px;color:#1E293B">Generating developer argument…</div>'
+         + '<div style="font-size:0.78em;color:#94A3B8;line-height:1.6">'
+         + 'Error: argument too technical for this popup.<br>'
+         + 'The AI fell into a <code style="background:#F1F5F9;padding:1px 5px;border-radius:3px">for</code> loop with SOQL inside.<br><br>'
+         + '<em>It&rsquo;ll be out when the governor limit resets. Or in 180 days. 🍪</em>'
+         + '</div></div>',
+
+      po: '<div style="text-align:center;padding:18px 12px">'
+        + '<div style="font-size:1.8em;margin-bottom:10px">📋</div>'
+        + '<div style="font-weight:700;font-size:0.88em;margin-bottom:8px;color:#1E293B">Calculating sprint impact…</div>'
+        + '<div style="font-size:0.78em;color:#94A3B8;line-height:1.6">'
+        + 'Warning: this argument requires a roadmap session,<br>3 sprint reviews, and a prioritisation workshop.<br><br>'
+        + '<em>Estimated delivery: Q4. Of next year. 🌸</em>'
+        + '</div></div>',
+
+      mgmt: '<div class="ai-mgmt-response">'
+          + '<div class="ai-mgmt-tagline">💡 &ldquo;Can we afford to fix it?&rdquo; — wrong question.</div>'
+          + '<div class="ai-mgmt-cards">'
+          +   '<div class="ai-mgmt-stat"><div class="ai-mgmt-stat-val">3×</div><div class="ai-mgmt-stat-label">ROI on every<br>$1 invested in fixes</div></div>'
+          +   '<div class="ai-mgmt-stat"><div class="ai-mgmt-stat-val">−30%</div><div class="ai-mgmt-stat-label">velocity lost to<br>unmanaged debt</div></div>'
+          +   '<div class="ai-mgmt-stat"><div class="ai-mgmt-stat-val">+3</div><div class="ai-mgmt-stat-label">phantom sprints<br>per year, on avg</div></div>'
+          + '</div>'
+          + '<div class="ai-mgmt-risk">🚨 <strong>Real risk:</strong> your key integration expert leaves tomorrow. Institutional knowledge walks out the door — nobody wrote it down, they were too busy firefighting. That&rsquo;s not a garden 🌸. That&rsquo;s a minefield.</div>'
+          + '<div class="ai-mgmt-close">The right question: <strong>can we afford <em>not</em> to?</strong><span style="color:#7C3AED">&nbsp; 🍪 Cookies optional. ROI isn&rsquo;t.</span></div>'
+          + '</div>',
+
+      user: '<div style="text-align:center;padding:18px 12px">'
+          + '<div style="font-size:1.8em;margin-bottom:10px">🎯</div>'
+          + '<div style="font-weight:700;font-size:0.88em;margin-bottom:8px;color:#1E293B">Translating to user language…</div>'
+          + '<div style="font-size:0.78em;color:#94A3B8;line-height:1.6">'
+          + 'The AI tried. Its best output was:<br><br>'
+          + '<em style="color:#475569">&ldquo;It&rsquo;s slow because of computers.&rdquo;</em><br><br>'
+          + 'A more nuanced version is in progress. 🍪🌸'
+          + '</div></div>'
+    };
+
+    function openAIPopup() {
+      var el = document.getElementById('popup-ai');
+      el.style.display = 'flex';
+      setTimeout(function() { el.style.opacity = '1'; }, 10);
+      setTimeout(function() { showAIArg('mgmt'); }, 60);
+    }
+    function closeAIPopup() {
+      var el = document.getElementById('popup-ai');
+      el.style.opacity = '0';
+      setTimeout(function() { el.style.display = 'none'; }, 280);
+    }
+    function showAIArg(profile) {
+      document.querySelectorAll('.ai-arg-btn').forEach(function(b) {
+        b.classList.toggle('active', b.dataset.target === profile);
+      });
+      var resp = document.getElementById('ai-arg-response');
+      resp.style.opacity = '0';
+      resp.innerHTML = '<span class="ai-cursor" style="color:#7C3AED;font-weight:600">Generating argument</span>';
+      setTimeout(function() { resp.style.opacity = '1'; }, 50);
+      setTimeout(function() {
+        resp.style.opacity = '0';
+        setTimeout(function() {
+          resp.innerHTML = AI_ARGS[profile];
+          resp.style.opacity = '1';
+        }, 200);
+      }, 750);
+    }
+    document.addEventListener('click', function(e) {
+      var popup = document.getElementById('popup-ai');
+      if (popup && popup.style.display === 'flex' && e.target === popup) closeAIPopup();
+    });
+
+    function openTypeModal(id) {
+      var el = document.getElementById(id);
+      if (el) el.classList.add('open');
+    }
+    function closeTypeModal(id) {
+      var el = document.getElementById(id);
+      if (el) el.classList.remove('open');
+    }
+    function _closeAllTypeModals() {
+      document.querySelectorAll('.dt-modal-backdrop.open').forEach(function(m) { m.classList.remove('open'); });
+    }
+
+    function hidePopup(id) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      el.classList.remove('popup-visible');
+      setTimeout(function() {
+        el.style.display = 'none';
+        var body = document.getElementById(id + '-body');
+        if (body) { body.style.display = 'none'; delete body.dataset.expanded; }
+        var hint = el.querySelector('.popup-more-hint');
+        if (hint) hint.style.display = '';
+      }, 350);
+    }
+
+    function _hideAllPopups() {
+      POPUPS.forEach(function(p) {
+        var el = document.getElementById(p.id);
+        if (!el) return;
+        el.classList.remove('popup-visible');
+        el.style.display = 'none';
+        var body = document.getElementById(p.id + '-body');
+        if (body) { body.style.display = 'none'; delete body.dataset.expanded; }
+      });
+    }
+
+    window._fragmentAnims = window._fragmentAnims || {};
+
+    // ── AgentForce 2030 chat steps ─────────────────────────────────
+    function _afShowMsg(n) {
+      var el = document.getElementById('dt-af-msg-' + n);
+      if (!el) return;
+      el.classList.remove('dt-af-enter');
+      el.style.display = 'flex';
+      void el.offsetHeight;
+      el.classList.add('dt-af-enter');
+    }
+    function _afHideMsg(n) {
+      var el = document.getElementById('dt-af-msg-' + n);
+      if (el) { el.style.display = 'none'; el.classList.remove('dt-af-enter'); }
+    }
+    function _afReset() {
+      document.getElementById('dt-af-modal').classList.remove('dt-af-open');
+      for (var i = 1; i <= 5; i++) _afHideMsg(i);
+    }
+
+    Reveal.on('ready', function() { _hideAllPopups(); _afReset(); });
+
+    Reveal.on('slidechanged', function(e) {
+      _afReset();
+      _hideAllPopups();
+      _closeAllTypeModals();
+      // Bloc center entrance animation
+      e.currentSlide.querySelectorAll('.bloc-center').forEach(function(b) {
+        b.classList.remove('anim-running');
+        void b.offsetHeight;
+        setTimeout(function() { b.classList.add('anim-running'); }, 120);
+      });
+      // Animated stat bars
+      e.currentSlide.querySelectorAll('.dt-stat-fill').forEach(function(bar, i) {
+        var pct = parseInt(bar.dataset.pct || '0');
+        bar.style.width = '0%';
+        var color = bar.dataset.color;
+        if (color === 'warn')  bar.style.background = 'linear-gradient(90deg,#F59E0B,#DC2626)';
+        else if (color === 'blue')  bar.style.background = 'linear-gradient(90deg,#1D4ED8,#7C3AED)';
+        else if (color === 'green') bar.style.background = 'linear-gradient(90deg,#16A34A,#0EA5E9)';
+        setTimeout(function() {
+          bar.style.width = pct + '%';
+          var valEl = document.getElementById('dts' + (i + 1) + 'v');
+          if (!valEl) return;
+          var startTime = null, dur = 1800;
+          function step(ts) {
+            if (!startTime) startTime = ts;
+            var prog = Math.min((ts - startTime) / dur, 1);
+            valEl.textContent = Math.round(prog * pct) + '%';
+            if (prog < 1) requestAnimationFrame(step);
+          }
+          requestAnimationFrame(step);
+        }, i * 250);
+      });
+    });
+
+    Reveal.on('fragmentshown', function(e) {
+      var f = e.fragment;
+      var showId   = f.getAttribute('data-popup-show');
+      var expandId = f.getAttribute('data-popup-expand');
+      var closeId  = f.getAttribute('data-popup-close');
+      if (showId)   _popupShow(showId);
+      if (expandId) _popupExpand(expandId);
+      if (closeId)  hidePopup(closeId);
+      var animKey = f.dataset.animKey;
+      if (animKey && window._fragmentAnims[animKey]) window._fragmentAnims[animKey]();
+      var mOpen  = f.getAttribute('data-modal-open');
+      var mClose = f.getAttribute('data-modal-close');
+      if (mClose) closeTypeModal(mClose);
+      if (mOpen)  openTypeModal(mOpen);
+      var aiPop = f.getAttribute('data-ai-popup');
+      if (aiPop === 'open')  openAIPopup();
+      if (aiPop === 'close') closeAIPopup();
+      var iframeMsg = f.getAttribute('data-iframe-msg');
+      if (iframeMsg) {
+        var iframe = document.getElementById('iframe-fillrate');
+        if (iframe && iframe.contentWindow) iframe.contentWindow.postMessage(iframeMsg, '*');
+      }
+      var afStep = f.getAttribute('data-af-step');
+      if (afStep !== null) {
+        var step = parseInt(afStep);
+        if (step === 1) { document.getElementById('dt-af-modal').classList.add('dt-af-open'); _afShowMsg(1); }
+        else if (step <= 5) { _afShowMsg(step); }
+        else { _afReset(); }
+      }
+    });
+
+    Reveal.on('fragmenthidden', function(e) {
+      var f = e.fragment;
+      var showId   = f.getAttribute('data-popup-show');
+      var expandId = f.getAttribute('data-popup-expand');
+      var closeId  = f.getAttribute('data-popup-close');
+      if (closeId)  _popupShow(closeId);
+      if (expandId) _popupCollapse(expandId);
+      if (showId)   hidePopup(showId);
+      var aiPop = f.getAttribute('data-ai-popup');
+      if (aiPop === 'open')  closeAIPopup();
+      if (aiPop === 'close') openAIPopup();
+      var iframeMsg = f.getAttribute('data-iframe-msg');
+      if (iframeMsg) {
+        var iframe = document.getElementById('iframe-fillrate');
+        if (iframe && iframe.contentWindow) iframe.contentWindow.postMessage(iframeMsg + '-back', '*');
+      }
+      var mOpen  = f.getAttribute('data-modal-open');
+      var mClose = f.getAttribute('data-modal-close');
+      if (mOpen)  closeTypeModal(mOpen);
+      if (mClose) openTypeModal(mClose);
+      var afStep = f.getAttribute('data-af-step');
+      if (afStep !== null) {
+        var step = parseInt(afStep);
+        if (step === 1) { _afReset(); }
+        else if (step <= 5) { _afHideMsg(step); }
+        else { document.getElementById('dt-af-modal').classList.add('dt-af-open'); }
+      }
+    });
+
+  </script>
+
+  <!-- ── AgentForce 2030 — Fun Fact Modal ─────────────────────────────── -->
+  <div id="dt-af-modal" class="dt-af-overlay">
+    <div class="dt-af-dialog">
+      <div class="dt-af-header">
+        <div class="dt-af-header-title">
+          💬 Live Support Chat &nbsp;<span class="dt-af-live-badge">LIVE</span>
+        </div>
+      </div>
+      <div class="dt-af-messages">
+
+        <div id="dt-af-msg-1" class="dt-af-msg dt-af-msg--ai" style="display:none">
+          <div class="dt-af-avatar">🤖</div>
+          <div class="dt-af-bubble">
+            <div class="dt-af-sender">AgentForce</div>
+            <p>Good news! There is a simple native SOQL query to calculate field usage rate:</p>
+            <p><code>SELECT Name, FieldUsage FROM FieldDefinition</code></p>
+            <p>Native. Simple. No package required. ✅</p>
+          </div>
+        </div>
+
+        <div id="dt-af-msg-2" class="dt-af-msg dt-af-msg--user" style="display:none">
+          <div class="dt-af-avatar">👤</div>
+          <div class="dt-af-bubble">
+            <div class="dt-af-sender">You</div>
+            <p>Interesting... where exactly does this information come from?</p>
+          </div>
+        </div>
+
+        <div id="dt-af-msg-3" class="dt-af-msg dt-af-msg--ai dt-af-msg--2030" style="display:none">
+          <div class="dt-af-avatar">🤖</div>
+          <div class="dt-af-bubble">
+            <div class="dt-af-sender">AgentForce <span class="dt-af-year">2030</span></div>
+            <p>I am <strong style="color:#A78BFA">AgentForce 2030</strong>. A minor temporal miscalculation brought me here.</p>
+            <p><code>FieldUsage</code> will be a native field in <code>FieldDefinition</code>. Eventually.</p>
+            <p>I have filed a correction ticket: <span class="dt-af-ticket">#AF2030-001</span></p>
+          </div>
+        </div>
+
+        <div id="dt-af-msg-4" class="dt-af-msg dt-af-msg--user" style="display:none">
+          <div class="dt-af-avatar">👤</div>
+          <div class="dt-af-bubble">
+            <div class="dt-af-sender">You</div>
+            <p>This field does not exist. I just checked.</p>
+          </div>
+        </div>
+
+        <div id="dt-af-msg-5" class="dt-af-msg dt-af-msg--ai dt-af-msg--2030" style="display:none">
+          <div class="dt-af-avatar">🤖</div>
+          <div class="dt-af-bubble">
+            <div class="dt-af-sender">AgentForce <span class="dt-af-year">2030</span></div>
+            <p>Confirmed. The field is scheduled for release in a future sprint I cannot disclose.</p>
+            <p>I apologise for any confusion, for the support ticket you definitely opened, and for the 30 minutes of SOQL debugging.</p>
+            <p>The incident has been logged. Have a nice day. 🤖</p>
+            <div class="dt-af-footnote">— Returning to 2030. This conversation will self-archive in 3... 2...</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
