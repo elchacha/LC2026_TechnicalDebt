@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>User Access Score</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+    background: #ffffff; padding: 16px; font-size: 13px; color: #1a1a1a;
+  }
+  .app {
+    background: #ffffff; border-radius: 4px;
+    max-width: 1160px; margin: 0 auto; overflow: hidden;
+  }
+
+  /* ── Header ── */
+  .app-header { padding: 7px 12px; background: #fff; border-bottom: 1px solid #ddd;
+    border-radius: 4px 4px 0 0; }
+  .app-title    { font-size: 0.95em; font-weight: 700; color: #1a1a1a; margin-bottom: 2px; }
+  .app-subtitle { font-size: 0.70em; color: #555; }
+
+  /* ── Filter bar ── */
+  .filter-bar {
+    padding: 5px 12px; background: #f8f8f8; border-bottom: 1px solid #ddd;
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  }
+  .filter-label { font-size: 0.72em; font-weight: 600; color: #444; margin-right: 4px; }
+  .cb-group { display: flex; align-items: center; gap: 3px; }
+  .cb-group input[type=checkbox] { width: 12px; height: 12px; cursor: pointer; accent-color: #0070d2; }
+  .cb-label { font-size: 0.70em; font-weight: 600; }
+  .cb-minimal   { color: #16a34a; }
+  .cb-moderate  { color: #b45309; }
+  .cb-high      { color: #0070d2; }
+  .cb-veryhigh  { color: #7c3aed; }
+  .cb-critical  { color: #dc2626; background: #fee2e2; padding: 1px 5px;
+                  border: 1px solid #fca5a5; border-radius: 3px; }
+
+  /* ── Toolbar ── */
+  .toolbar {
+    padding: 5px 12px; background: #f0f0f0; border-bottom: 1px solid #ddd;
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  }
+  .btn { border: none; border-radius: 3px; padding: 3px 9px; font-size: 0.70em; font-weight: 600; cursor: pointer; }
+  .btn-default  { background: #e0e0e0; border: 1px solid #bbb; color: #333; }
+  .btn-detail   { background: #f5f5f5; border: 1px solid #bbb; color: #333; }
+  .cache-info   { font-size: 0.65em; color: #666; font-style: italic; margin-left: 4px; }
+  .filter-input {
+    border: 1px solid #bbb; border-radius: 3px; padding: 2px 6px;
+    font-size: 0.70em; color: #1a1a1a; background: white; min-width: 120px; margin-left: auto;
+  }
+  .toolbar-cb-group { display: flex; align-items: center; gap: 3px; font-size: 0.68em; color: #555; }
+  .toolbar-cb-group input { width: 11px; height: 11px; }
+
+  /* ── Main layout ── */
+  .main { display: flex; gap: 6px; padding: 6px; background: #ffffff; }
+
+  /* ── Left table ── */
+  .table-wrap {
+    flex: 1; overflow-x: auto; background: white;
+    border-radius: 3px; box-shadow: 0 1px 4px rgba(0,0,0,0.10);
+    overflow-y: auto; max-height: 460px;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    background: #dce6f0; padding: 5px 8px; text-align: left;
+    font-size: 0.76em; font-weight: 700; color: #333; border-bottom: 2px solid #b0c4d8;
+    white-space: nowrap; position: sticky; top: 0; z-index: 1;
+  }
+  thead th.col-num { text-align: right; }
+  tbody tr { border-bottom: 1px solid #f0f0f0; }
+  tbody tr:hover { filter: brightness(0.97); }
+  tbody td { padding: 3px 8px; font-size: 0.75em; color: #1a1a1a; white-space: nowrap; }
+  tbody td.col-num { text-align: right; color: #444; font-variant-numeric: tabular-nums; }
+  tbody td.col-rank { text-align: center; font-weight: 700; color: #555; }
+
+  /* Row privilege coloring */
+  tr.row-critical  { background: #ffd7d7; }
+  tr.row-veryhigh  { background: #ffe8cc; }
+  tr.row-high      { background: #fff9e6; }
+
+  tr.row-selected td { font-weight: 600; }
+
+  /* Checkbox column */
+  td.col-cb { width: 24px; text-align: center; padding: 3px 4px; }
+  td.col-cb input { width: 12px; height: 12px; accent-color: #0070d2; }
+
+  /* ── Right panel ── */
+  .rt-panel {
+    width: 380px; flex-shrink: 0; background: white;
+    border-radius: 3px; box-shadow: 0 1px 4px rgba(0,0,0,0.10);
+    display: flex; flex-direction: column;
+  }
+  .rt-actions {
+    padding: 5px 8px; display: flex; gap: 6px; border-bottom: 1px solid #ddd;
+    background: #f8f8f8;
+  }
+  .btn-assign   { background: #fca5a5; border: 1px solid #ef4444; color: #7f1d1d; font-size: 0.68em; font-weight: 600;
+                  padding: 3px 10px; border-radius: 3px; cursor: pointer; }
+  .btn-unassign { background: #fca5a5; border: 1px solid #ef4444; color: #7f1d1d; font-size: 0.68em; font-weight: 600;
+                  padding: 3px 10px; border-radius: 3px; cursor: pointer; }
+  .rt-header {
+    background: #dce6f0; padding: 5px 8px; font-size: 0.72em; font-weight: 700;
+    color: #333; border-bottom: 2px solid #b0c4d8; display: flex; align-items: center; gap: 4px;
+  }
+  .rt-col-type  { width: 36px; }
+  .rt-col-name  { flex: 1; }
+  .rt-col-score { width: 48px; text-align: right; }
+  .rt-col-user  { width: 42px; text-align: center; }
+
+  .rt-row {
+    display: flex; align-items: center; padding: 2px 8px;
+    border-bottom: 1px solid #f0f0f0; font-size: 0.70em; gap: 4px;
+  }
+  .rt-row:hover { background: #f5f9ff; }
+
+  /* Type badges */
+  .badge {
+    display: inline-block; padding: 1px 4px; border-radius: 3px;
+    font-size: 0.68em; font-weight: 700; color: white; text-align: center;
+    min-width: 28px; letter-spacing: 0.03em;
+  }
+  .badge-ps  { background: #6b9ec9; }
+  .badge-psg { background: #1a5276; }
+  .badge-pro { background: #1a2e4a; }
+
+  /* Check mark in user columns */
+  .check { color: #1a1a1a; font-weight: 700; font-size: 0.85em; }
+
+  /* Score chip */
+  .score-chip {
+    display: inline-block; background: #f0f0f0; color: #333;
+    padding: 1px 5px; border-radius: 3px; font-size: 0.82em;
+    font-variant-numeric: tabular-nums; font-weight: 600;
+  }
+
+  /* ── Highlight animations ── */
+  .cell-spot {
+    background: #fef08a !important; color: #92400e !important; font-weight: 800 !important;
+    box-shadow: inset 0 0 0 2px #f59e0b;
+  }
+  .panel-spot {
+    box-shadow: 0 0 0 3px #f59e0b, 0 4px 20px rgba(245,158,11,0.35) !important;
+  }
+  .row-spot { outline: 2px solid #f59e0b; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Header -->
+  <div class="app-header">
+    <div class="app-title">User Access Score</div>
+    <div class="app-subtitle">Assess user privilege levels. Users are ranked by access score and color-coded from Minimal to CRITICAL.</div>
+  </div>
+
+  <!-- Filter bar -->
+  <div class="filter-bar">
+    <span class="filter-label">Filter by privilege level:</span>
+    <label class="cb-group">
+      <input type="checkbox" checked>
+      <span class="cb-label cb-minimal">Minimal (0-20%)</span>
+    </label>
+    <label class="cb-group">
+      <input type="checkbox" checked>
+      <span class="cb-label cb-moderate">Moderate (20-50%)</span>
+    </label>
+    <label class="cb-group">
+      <input type="checkbox" checked>
+      <span class="cb-label cb-high">High (50-80%)</span>
+    </label>
+    <label class="cb-group">
+      <input type="checkbox" checked>
+      <span class="cb-label cb-veryhigh">Very High (80-95%)</span>
+    </label>
+    <label class="cb-group">
+      <input type="checkbox" checked>
+      <span class="cb-label cb-critical">CRITICAL (95-100%)</span>
+    </label>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <button class="btn btn-default">Refresh</button>
+    <button class="btn btn-detail">show detail</button>
+    <span class="cache-info">Cache: 15/05/2026 12:48</span>
+    <input class="filter-input" type="text" placeholder="filter">
+    <label class="toolbar-cb-group">
+      <input type="checkbox"> exact word
+    </label>
+    <label class="toolbar-cb-group">
+      <input type="checkbox"> include permset to filter
+    </label>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- Left table -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:24px"></th>
+            <th class="col-num" style="width:38px">Rank</th>
+            <th>Username</th>
+            <th>Profil</th>
+            <th style="width:52px">Alias</th>
+            <th class="col-num" style="width:60px">Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="row-critical">
+            <td class="col-cb"><input type="checkbox"></td>
+            <td class="col-rank">1</td>
+            <td>User 01</td>
+            <td>System Administrator</td>
+            <td>usr01</td>
+            <td class="col-num">15 649</td>
+          </tr>
+          <tr class="row-veryhigh row-selected" id="row-cathay">
+            <td class="col-cb"><input type="checkbox" checked></td>
+            <td class="col-rank">2</td>
+            <td>User 02</td>
+            <td>SimpleReader</td>
+            <td>simpleUser</td>
+            <td class="col-num">12 345</td>
+          </tr>
+          <tr class="row-veryhigh">
+            <td class="col-cb"><input type="checkbox"></td>
+            <td class="col-rank">3</td>
+            <td>User 03</td>
+            <td>System Administrator</td>
+            <td>usr03</td>
+            <td class="col-num">11 004</td>
+          </tr>
+          <tr class="row-veryhigh">
+            <td class="col-cb"><input type="checkbox"></td>
+            <td class="col-rank">4</td>
+            <td>User 04</td>
+            <td>System Administrator</td>
+            <td>usr04</td>
+            <td class="col-num">8 041</td>
+          </tr>
+          <tr class="row-veryhigh row-selected" id="row-lsor">
+            <td class="col-cb"><input type="checkbox" checked></td>
+            <td class="col-rank">5</td>
+            <td>User 05</td>
+            <td>System Administrator</td>
+            <td>usr05</td>
+            <td class="col-num">7 856</td>
+          </tr>
+          <tr class="row-high">
+            <td class="col-cb"><input type="checkbox"></td>
+            <td class="col-rank">6</td>
+            <td>User 06</td>
+            <td>Profile A</td>
+            <td>usr06</td>
+            <td class="col-num">4 102</td>
+          </tr>
+          <tr class="row-high">
+            <td class="col-cb"><input type="checkbox"></td>
+            <td class="col-rank">7</td>
+            <td>User 07</td>
+            <td>Profile A</td>
+            <td>usr07</td>
+            <td class="col-num">3 616</td>
+          </tr>
+          <tr>
+            <td class="col-cb"><input type="checkbox"></td>
+            <td class="col-rank">8</td>
+            <td>User 08</td>
+            <td>Profile A</td>
+            <td>usr08</td>
+            <td class="col-num">3 115</td>
+          </tr>
+          <tr>
+            <td class="col-cb"><input type="checkbox"></td>
+            <td class="col-rank">9</td>
+            <td>User 09</td>
+            <td>Profile A</td>
+            <td>usr09</td>
+            <td class="col-num">2 745</td>
+          </tr>
+          <tr>
+            <td class="col-cb"><input type="checkbox"></td>
+            <td class="col-rank">10</td>
+            <td>User 10</td>
+            <td>Profile A</td>
+            <td>usr10</td>
+            <td class="col-num">2 685</td>
+          </tr>
+          <tr>
+            <td class="col-cb"><input type="checkbox"></td>
+            <td class="col-rank">11</td>
+            <td>User 11</td>
+            <td>Profile B</td>
+            <td>usr11</td>
+            <td class="col-num">2 619</td>
+          </tr>
+          <tr>
+            <td class="col-cb"><input type="checkbox"></td>
+            <td class="col-rank">12</td>
+            <td>User 12</td>
+            <td>Profile C</td>
+            <td>usr12</td>
+            <td class="col-num">2 600</td>
+          </tr>
+          <tr>
+            <td class="col-cb"><input type="checkbox"></td>
+            <td class="col-rank">12</td>
+            <td>User 13</td>
+            <td>Profile C</td>
+            <td>usr13</td>
+            <td class="col-num">2 600</td>
+          </tr>
+          <tr>
+            <td class="col-cb"><input type="checkbox"></td>
+            <td class="col-rank">12</td>
+            <td>User 14</td>
+            <td>Profile C</td>
+            <td>usr14</td>
+            <td class="col-num">2 600</td>
+          </tr>
+          <tr>
+            <td class="col-cb"><input type="checkbox"></td>
+            <td class="col-rank">15</td>
+            <td>User 15</td>
+            <td>Profile C</td>
+            <td>usr15</td>
+            <td class="col-num">2 576</td>
+          </tr>
+          <tr>
+            <td class="col-cb"><input type="checkbox"></td>
+            <td class="col-rank">16</td>
+            <td>User 16</td>
+            <td>Profile C</td>
+            <td>usr16</td>
+            <td class="col-num">2 575</td>
+          </tr>
+          <tr>
+            <td class="col-cb"><input type="checkbox"></td>
+            <td class="col-rank">17</td>
+            <td>Integration User</td>
+            <td>Profile D</td>
+            <td>int01</td>
+            <td class="col-num">2 497</td>
+          </tr>
+          <tr>
+            <td class="col-cb"><input type="checkbox"></td>
+            <td class="col-rank">18</td>
+            <td>User 17</td>
+            <td>Profile C</td>
+            <td>usr17</td>
+            <td class="col-num">2 395</td>
+          </tr>
+          <tr>
+            <td class="col-cb"><input type="checkbox"></td>
+            <td class="col-rank">19</td>
+            <td>User 18</td>
+            <td>Profile A</td>
+            <td>usr18</td>
+            <td class="col-num">2 376</td>
+          </tr>
+          <tr>
+            <td class="col-cb"><input type="checkbox"></td>
+            <td class="col-rank">20</td>
+            <td>User 19</td>
+            <td>Profile A</td>
+            <td>usr19</td>
+            <td class="col-num">2 370</td>
+          </tr>
+          <tr>
+            <td class="col-cb"><input type="checkbox"></td>
+            <td class="col-rank">21</td>
+            <td>sinequa</td>
+            <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis">Salesforce API Only System Integr…</td>
+            <td>sine</td>
+            <td class="col-num">2 318</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Right panel -->
+    <div class="rt-panel" id="rt-panel">
+      <div class="rt-actions">
+        <button class="btn-assign">Assign</button>
+        <button class="btn-unassign">UnAssign</button>
+      </div>
+      <div class="rt-header">
+        <span class="rt-col-type">Type</span>
+        <span class="rt-col-name">Name</span>
+        <span class="rt-col-score">Score</span>
+        <span class="rt-col-user">simpleUser</span>
+        <span class="rt-col-user">usr05</span>
+      </div>
+
+      <!-- Permission sets rows -->
+      <div class="rt-row">
+        <span class="rt-col-type"><span class="badge badge-ps">PS</span></span>
+        <span class="rt-col-name">Custom_Permission_set_01</span>
+        <span class="rt-col-score"><span class="score-chip">7800</span></span>
+        <span class="rt-col-user"><span class="check">X</span></span>
+        <span class="rt-col-user"></span>
+      </div>
+      <div class="rt-row">
+        <span class="rt-col-type"><span class="badge badge-ps">PS</span></span>
+        <span class="rt-col-name">Manage_Community_Partners</span>
+        <span class="rt-col-score"><span class="score-chip">3299</span></span>
+        <span class="rt-col-user"><span class="check">X</span></span>
+        <span class="rt-col-user"></span>
+      </div>
+      <div class="rt-row">
+        <span class="rt-col-type"><span class="badge badge-ps">PS</span></span>
+        <span class="rt-col-name">BackupRestore</span>
+        <span class="rt-col-score"><span class="score-chip">430</span></span>
+        <span class="rt-col-user"><span class="check">X</span></span>
+        <span class="rt-col-user"></span>
+      </div>
+      <div class="rt-row">
+        <span class="rt-col-type"><span class="badge badge-ps">PS</span></span>
+        <span class="rt-col-name">Test_community_v2</span>
+        <span class="rt-col-score"><span class="score-chip">187</span></span>
+        <span class="rt-col-user"><span class="check">X</span></span>
+        <span class="rt-col-user"></span>
+      </div>
+      <div class="rt-row" style="background:#dbeafe;">
+        <span class="rt-col-type"><span class="badge badge-psg">PSG</span></span>
+        <span class="rt-col-name" style="font-weight:700">Knowledge_Platform_Set</span>
+        <span class="rt-col-score"><span class="score-chip">187</span></span>
+        <span class="rt-col-user"><span class="check">X</span></span>
+        <span class="rt-col-user"></span>
+      </div>
+      <div class="rt-row">
+        <span class="rt-col-type"><span class="badge badge-ps">PS</span></span>
+        <span class="rt-col-name">Scan_to_Salesforce</span>
+        <span class="rt-col-score"><span class="score-chip">151</span></span>
+        <span class="rt-col-user"><span class="check">X</span></span>
+        <span class="rt-col-user"></span>
+      </div>
+      <div class="rt-row">
+        <span class="rt-col-type"><span class="badge badge-ps">PS</span></span>
+        <span class="rt-col-name">Merge_accounts</span>
+        <span class="rt-col-score"><span class="score-chip">94</span></span>
+        <span class="rt-col-user"><span class="check">X</span></span>
+        <span class="rt-col-user"></span>
+      </div>
+      <div class="rt-row">
+        <span class="rt-col-type"><span class="badge badge-ps">PS</span></span>
+        <span class="rt-col-name">Any_Record_Hierarchy</span>
+        <span class="rt-col-score"><span class="score-chip">60</span></span>
+        <span class="rt-col-user"><span class="check">X</span></span>
+        <span class="rt-col-user"></span>
+      </div>
+      <div class="rt-row">
+        <span class="rt-col-type"><span class="badge badge-ps">PS</span></span>
+        <span class="rt-col-name">AI_Search</span>
+        <span class="rt-col-score"><span class="score-chip">47</span></span>
+        <span class="rt-col-user"><span class="check">X</span></span>
+        <span class="rt-col-user"></span>
+      </div>
+      <div class="rt-row">
+        <span class="rt-col-type"><span class="badge badge-ps">PS</span></span>
+        <span class="rt-col-name">Timeline_Weekly_on_salesforce</span>
+        <span class="rt-col-score"><span class="score-chip">34</span></span>
+        <span class="rt-col-user"><span class="check">X</span></span>
+        <span class="rt-col-user"></span>
+      </div>
+      <div class="rt-row">
+        <span class="rt-col-type"><span class="badge badge-ps">PS</span></span>
+        <span class="rt-col-name">Create_and_Customize_Dashboards</span>
+        <span class="rt-col-score"><span class="score-chip">20</span></span>
+        <span class="rt-col-user"><span class="check">X</span></span>
+        <span class="rt-col-user"></span>
+      </div>
+      <div class="rt-row">
+        <span class="rt-col-type"><span class="badge badge-ps">PS</span></span>
+        <span class="rt-col-name">Custom_Permission_set_02</span>
+        <span class="rt-col-score"><span class="score-chip">7</span></span>
+        <span class="rt-col-user"><span class="check">X</span></span>
+        <span class="rt-col-user"></span>
+      </div>
+      <div class="rt-row">
+        <span class="rt-col-type"><span class="badge badge-ps">PS</span></span>
+        <span class="rt-col-name" style="font-size:0.88em">Connected_App_Access_Allocation_Workbench</span>
+        <span class="rt-col-score"><span class="score-chip">5</span></span>
+        <span class="rt-col-user"><span class="check">X</span></span>
+        <span class="rt-col-user"></span>
+      </div>
+      <div class="rt-row">
+        <span class="rt-col-type"><span class="badge badge-ps">PS</span></span>
+        <span class="rt-col-name">MFA_For_admin</span>
+        <span class="rt-col-score"><span class="score-chip">4</span></span>
+        <span class="rt-col-user"><span class="check">X</span></span>
+        <span class="rt-col-user"></span>
+      </div>
+      <div class="rt-row">
+        <span class="rt-col-type"><span class="badge badge-ps">PS</span></span>
+        <span class="rt-col-name">Import_Custom_Objects</span>
+        <span class="rt-col-score"><span class="score-chip">2</span></span>
+        <span class="rt-col-user"><span class="check">X</span></span>
+        <span class="rt-col-user"></span>
+      </div>
+      <div class="rt-row">
+        <span class="rt-col-type"><span class="badge badge-ps">PS</span></span>
+        <span class="rt-col-name">MFA_For_user</span>
+        <span class="rt-col-score"><span class="score-chip">2</span></span>
+        <span class="rt-col-user"><span class="check">X</span></span>
+        <span class="rt-col-user"><span class="check">X</span></span>
+      </div>
+      <div class="rt-row">
+        <span class="rt-col-type"><span class="badge badge-ps">PS</span></span>
+        <span class="rt-col-name">Change_Owner</span>
+        <span class="rt-col-score"><span class="score-chip">2</span></span>
+        <span class="rt-col-user"><span class="check">X</span></span>
+        <span class="rt-col-user"></span>
+      </div>
+      <div class="rt-row">
+        <span class="rt-col-type"><span class="badge badge-ps">PS</span></span>
+        <span class="rt-col-name">Lightning_Email_permission_set</span>
+        <span class="rt-col-score"><span class="score-chip">2</span></span>
+        <span class="rt-col-user"><span class="check">X</span></span>
+        <span class="rt-col-user"></span>
+      </div>
+      <div class="rt-row" style="background:#e8edf5;">
+        <span class="rt-col-type"><span class="badge badge-pro">PRO</span></span>
+        <span class="rt-col-name" style="font-weight:600">System Administrator</span>
+        <span class="rt-col-score"><span class="score-chip">7854</span></span>
+        <span class="rt-col-user"></span>
+        <span class="rt-col-user"><span class="check">X</span></span>
+      </div>
+      <div class="rt-row" style="background:#e8edf5;">
+        <span class="rt-col-type"><span class="badge badge-pro">PRO</span></span>
+        <span class="rt-col-name" style="font-weight:600">SimpleReader</span>
+        <span class="rt-col-score"><span class="score-chip">12</span></span>
+        <span class="rt-col-user"><span class="check">X</span></span>
+        <span class="rt-col-user"></span>
+      </div>
+
+    </div><!-- /rt-panel -->
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+  /* postMessage API for Reveal.js slide integration */
+  window.addEventListener('message', function(e) {
+    if      (e.data === 'uas-step-1')      highlightCritical();
+    else if (e.data === 'uas-step-1-back') resetHighlight();
+    else if (e.data === 'uas-step-2')      highlightSelected();
+    else if (e.data === 'uas-step-2-back') resetHighlight();
+  });
+
+  function highlightCritical() {
+    var row = document.querySelector('tr.row-critical');
+    if (row) row.classList.add('row-spot');
+  }
+  function highlightSelected() {
+    var panel = document.getElementById('rt-panel');
+    panel.classList.add('panel-spot');
+    document.getElementById('row-cathay').classList.add('row-spot');
+    document.getElementById('row-lsor').classList.add('row-spot');
+  }
+  function resetHighlight() {
+    document.querySelectorAll('.row-spot').forEach(function(r) { r.classList.remove('row-spot'); });
+    document.getElementById('rt-panel').classList.remove('panel-spot');
+  }
+</script>
+</body>
+</html>

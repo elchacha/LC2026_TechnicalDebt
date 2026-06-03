@@ -684,6 +684,35 @@
     }
     @keyframes aiCursor { 0%,100%{opacity:1} 50%{opacity:0} }
     .ai-cursor::after { content:'▋'; animation: aiCursor 0.6s step-end infinite; }
+    /* ── Reveal controls — shift left to avoid Scroll view button ── */
+    .reveal .controls { right: 130px !important; }
+    /* ── SOQL query highlight ── */
+    .soql-block { transition: opacity 0.3s ease; }
+    .soql-block pre { transition: outline 0.3s ease, box-shadow 0.3s ease; }
+    .soql-block-dimmed { opacity: 0.28; }
+    .soql-block-active-blue pre {
+      outline: 2px solid #1D4ED8;
+      box-shadow: 0 0 0 5px rgba(29,78,216,0.13);
+    }
+    .soql-block-active-green pre {
+      outline: 2px solid #16A34A;
+      box-shadow: 0 0 0 5px rgba(22,163,74,0.13);
+    }
+    @keyframes prodBlink {
+      0%,100% { background:#DC2626; color:white; box-shadow: 0 0 0 0 rgba(220,38,38,0); }
+      50%     { background:#FEE2E2; color:#7F1D1D; box-shadow: 0 0 0 4px rgba(220,38,38,0.35); }
+    }
+    .badge-prod-warn {
+      display:inline-block; font-size:0.72em; border-radius:4px; padding:2px 7px;
+      margin-left:6px; font-weight:700;
+      animation: prodBlink 1.1s ease-in-out infinite;
+    }
+    .badge-prod-done {
+      animation: none !important;
+      background: #DC2626 !important;
+      color: white !important;
+      box-shadow: none !important;
+    }
     /* ── AI Management response cards ── */
     .ai-mgmt-response { display: flex; flex-direction: column; gap: 10px; }
     .ai-mgmt-tagline { font-size: 0.80em; font-weight: 600; color: #1E293B; border-left: 3px solid #7C3AED; padding-left: 10px; line-height: 1.4; }
@@ -1012,6 +1041,27 @@
       font-size: 0.63em; font-weight: 600; padding: 3px 9px;
       border-radius: 4px; background: #1E293B; color: white;
     }
+    /* ── Modaux — format tableau When / How ── */
+    .dt-modal-pair-headers {
+      display: grid; grid-template-columns: 1fr 28px 1fr; margin-bottom: 6px;
+    }
+    .dt-modal-pairs { display: flex; flex-direction: column; gap: 7px; }
+    .dt-modal-pair-row {
+      display: grid; grid-template-columns: 1fr 28px 1fr; align-items: stretch;
+    }
+    .dt-modal-pair-arrow {
+      display: flex; align-items: center; justify-content: center;
+      color: #CBD5E1; font-size: 1em; flex-shrink: 0;
+    }
+    .dt-modal-cell-when {
+      font-size: 0.76em; padding: 6px 10px; border-radius: 6px;
+      background: #F8FAFC; border-left: 2px solid #E2E8F0; color: #374151;
+    }
+    .dt-modal-cell-fix {
+      font-size: 0.76em; padding: 6px 10px; border-radius: 6px;
+      background: #F0FDF4; border-left: 2px solid #86EFAC; color: #166534;
+    }
+    .dt-modal-cell-empty { padding: 0; }
 
     /* ── AgentForce 2030 — Fun Fact Chat ──────────────────────────── */
     @keyframes dt-af-pulse {
@@ -1118,6 +1168,10 @@
   <div class="lc-tw-speaker">
     <strong>Fabrice Challier</strong>
     Salesforce Technical Architect · London's Calling 2026
+    <br>
+    <strong>Doria Hamelryk</strong>
+    Salesforce Technical Architect · Architecture Sensei 🧙‍♀️
+    <span style="display:block;font-size:0.78em;opacity:0.65;font-style:italic;">(she taught me everything — and is therefore not responsible for this deck) 🏛️</span>
   </div>
 </div>
       </section>
@@ -1128,6 +1182,10 @@
 ### Understand, measure and pay it back
 
 _Fabrice Challier — Salesforce Technical Architect_
+
+_Doria Hamelryk — Salesforce Technical Architect · my Architecture Sensei_
+
+_(she taught me everything I know — and is therefore not responsible for this deck)_ 🏛️
       </textarea></section>
       <section>
 <div class="bt-center">
@@ -2089,6 +2147,29 @@ _Fabrice Challier — Salesforce Technical Architect_
   </div>
 </div>
       </section>
+      <section data-markdown>
+<textarea data-template>
+## Scale Center — The Performance Radar
+
+**Direct access:** `Setup > Scale Center` — free, native, 0 installation
+
+### What Scale Center Detects Automatically
+
+- ⚡ **SOQL without index** on large tables → timeouts in prod
+- 🔁 **DML loops** in Apex triggers → errors at volume
+- 📊 **Queries > 50,000 records** → governor limits
+- 🐌 **Page loads > 5s** → users dropping off
+
+### What It Doesn't Do
+
+Scale Center **points to the problem**, it doesn't fix anything. It's your radar, not your autopilot.
+
+> Only **5% of orgs** check Scale Center regularly.
+> The remaining 95% discover problems... in production.
+      </textarea>
+<span class="fragment" data-popup-show="scalecenter-stats" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
+<span class="fragment" data-popup-expand="scalecenter-stats" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
+<span class="fragment" data-popup-close="scalecenter-stats" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span></section>
       <section>
 <h2>The Removal Order — Important!</h2>
 <p style="font-size:0.75em;color:#EF4444;margin-bottom:10px;font-weight:600;">⚠️ Salesforce enforces strict dependencies — delete in the wrong order = guaranteed error.</p>
@@ -2130,65 +2211,59 @@ _Fabrice Challier — Salesforce Technical Architect_
 <span class="fragment" data-af-step="5" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
 <span class="fragment" data-af-step="6" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
       </section>
-      <section data-markdown>
-<textarea data-template>
-## Scale Center — The Performance Radar
+      <section>
+<h2>Diagnostic SOQL — 3 Essential Queries</h2>
 
-**Direct access:** `Setup > Scale Center` — free, native, 0 installation
+<div id="soql-block-vf" class="soql-block">
+<p style="font-size:0.78em;font-weight:600;color:#1E293B;margin:6px 0 2px;">
+  Visualforce pages — last access date
+  <span id="badge-prod-vf" class="badge-prod-warn">⚠ Prod org only</span>
+</p>
+<p style="font-size:0.68em;color:#475569;margin:0 0 4px;">Identify which VF pages are actually used — candidates for cleanup.</p>
+<pre><code class="language-sql">SELECT ApexPageId, ApexPage.Name, MAX(MetricsDate) MetricsDate
+FROM VisualforceAccessMetrics
+GROUP BY ApexPage.Name, ApexPageId</code></pre>
+<span class="fragment" data-popup-show="soql-vf" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
+<span class="fragment" data-popup-expand="soql-vf" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
+<span class="fragment" data-popup-close="soql-vf" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
+</div>
 
-### What Scale Center Detects Automatically
+<div id="soql-block-layout" class="soql-block">
+<p style="font-size:0.78em;font-weight:600;color:#1E293B;margin:8px 0 2px;">
+  Orphan layouts — not assigned to any active profile
+  <span style="font-size:0.72em;background:#F0FDF4;color:#15803D;border-radius:4px;padding:2px 7px;margin-left:6px;font-weight:500;">Tooling API</span>
+</p>
+<p style="font-size:0.68em;color:#475569;margin:0 0 4px;">Layouts no active user profile references — safe to decommission.</p>
+<pre><code class="language-sql">SELECT Id, Name, TableEnumOrId FROM Layout
+WHERE layoutType = 'Standard'
+  AND Id NOT IN (SELECT LayoutId FROM ProfileLayout
+    WHERE ProfileId IN ('Id1','Id2','Id3')
+    AND (recordType.IsActive = true OR recordTypeId = ''))
+ORDER BY EntityDefinitionId</code></pre>
+<span class="fragment" data-popup-show="soql-layout" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
+<span class="fragment" data-popup-expand="soql-layout" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
+<span class="fragment" data-popup-close="soql-layout" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
+</div>
 
-- ⚡ **SOQL without index** on large tables → timeouts in prod
-- 🔁 **DML loops** in Apex triggers → errors at volume
-- 📊 **Queries > 50,000 records** → governor limits
-- 🐌 **Page loads > 5s** → users dropping off
-
-### What It Doesn't Do
-
-Scale Center **points to the problem**, it doesn't fix anything. It's your radar, not your autopilot.
-
-> Only **5% of orgs** check Scale Center regularly.
-> The remaining 95% discover problems... in production.
-      </textarea>
-<span class="fragment" data-popup-show="scalecenter-stats" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
-<span class="fragment" data-popup-expand="scalecenter-stats" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
-<span class="fragment" data-popup-close="scalecenter-stats" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span></section>
-      <section data-markdown>
-<textarea data-template>
-## Diagnostic SOQL — 3 Essential Queries
-
-**Fields never populated (Tooling API)**
-
-```sql
-SELECT QualifiedApiName, Label, DataType
-FROM FieldDefinition
-WHERE EntityDefinition.QualifiedApiName = 'Opportunity'
-  AND IsCalculated = false
-```
-
-**Inactive Flows to delete**
-
-```sql
-SELECT Id, Label, ProcessType, Status, LastModifiedDate
-FROM Flow WHERE Status IN ('Obsolete','Draft')
-ORDER BY LastModifiedDate ASC
-```
-
-**Apex with insufficient coverage**
-
-```sql
-SELECT ApexClassOrTrigger.Name, NumLinesCovered, NumLinesUncovered
-FROM ApexCodeCoverageAggregate
-ORDER BY NumLinesUncovered DESC LIMIT 20
-```
-      </textarea>
-<span class="fragment" data-popup-show="soql-warning" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
-<span class="fragment" data-popup-close="soql-warning" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span></section>
-      <section style="padding: 10px 20px;">
-<h2 style="font-size:0.88em;margin-bottom:10px;">How to Analyse Field Usage Properly</h2>
+<div id="soql-block-dep" class="soql-block">
+<p style="font-size:0.78em;font-weight:600;color:#1E293B;margin:8px 0 2px;">
+  Component dependencies — before any deletion
+  <span style="font-size:0.72em;background:#F0FDF4;color:#15803D;border-radius:4px;padding:2px 7px;margin-left:6px;font-weight:500;">Tooling API</span>
+</p>
+<p style="font-size:0.68em;color:#475569;margin:0 0 4px;">Check what depends on a component before removing it — avoids cascading errors.</p>
+<pre><code class="language-sql">SELECT RefMetadataComponentId, RefMetadataComponentName,
+       RefMetadataComponentType
+FROM MetadataComponentDependency
+WHERE MetadataComponentId IN ('Id1','Id2')</code></pre>
+<span class="fragment" data-popup-show="soql-dep" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
+<span class="fragment" data-popup-expand="soql-dep" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
+<span class="fragment" data-popup-close="soql-dep" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
+</div>
+      </section>
+      <section style="padding: 4px 0 0; overflow:hidden;">
+<h2 style="font-size:0.88em;margin:0 20px 6px;">How to Analyse Field Usage Properly</h2>
 <iframe id="iframe-fillrate" src="field-fillrate.html"
-  style="width:100%; height:640px; border:none; border-radius:4px;
-         transform:scale(0.92); transform-origin:top center; margin-bottom:-52px;">
+  style="width:100%; height:634px; border:none; display:block;">
 </iframe>
 <span class="fragment" data-iframe-msg="ff-step-1" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
 <span class="fragment" data-iframe-msg="ff-step-2" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
@@ -2268,6 +2343,28 @@ ORDER BY NumLinesUncovered DESC LIMIT 20
   <div class="lc-tw-speaker">
     <strong>Fabrice Challier</strong>
     Salesforce Technical Architect · London's Calling 2026
+    <br>
+    <strong>Doria Hamelryk</strong>
+    Salesforce Technical Architect · Architecture Sensei 🧙‍♀️
+  </div>
+  <div style="position:absolute; left:44%; top:33%; z-index:5;
+    display:flex; gap:24px; align-items:center; overflow:hidden;
+    background:white; border-radius:12px; padding:16px 20px;
+    border:1px solid #FECACA; box-shadow:0 4px 20px rgba(137,16,25,0.12);">
+    <div style="width:210px; flex-shrink:0;">
+      <p style="font-size:0.50em; color:#891019; font-style:italic; line-height:1.75; margin:0 0 10px; font-family:'Segoe UI',Arial,sans-serif;">
+        You survived 40 minutes of technical debt. The least we can do is give you the deck.
+      </p>
+      <div style="font-size:0.43em; color:#891019; font-weight:700; font-family:'Courier New',monospace;
+        background:#FFF5F5; border:1px solid #FECACA; border-radius:5px;
+        padding:4px 8px; word-break:break-all;">
+        github.com/elchacha/LC2026_TechnicalDebt
+      </div>
+    </div>
+    <div style="flex-shrink:0; width:120px; height:120px; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+      <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&color=891019&bgcolor=ffffff&data=https%3A%2F%2Fgithub.com%2Felchacha%2FLC2026_TechnicalDebt"
+           style="width:120px !important; height:120px !important; max-width:120px !important; max-height:120px !important; display:block;" alt="QR code GitHub">
+    </div>
   </div>
 </div>
       </section>
@@ -2282,8 +2379,12 @@ ORDER BY NumLinesUncovered DESC LIMIT 20
   </div>
   <div class="lc-tw-divider"></div>
   <div class="lc-tw-speaker">
-    <strong>Fabrice Challier</strong>
-    fabricechallier@gmail.com
+    <span style="font-weight:700; color:#891019; font-size:1.05em;">Fabrice Challier</span>
+    <span style="color:#891019; opacity:0.4; margin:0 10px;">·</span>
+    <span style="font-weight:700; color:#891019; font-size:1.05em;">Doria Hamelryk</span>
+    <span style="display:block; font-style:italic; color:#891019; opacity:0.60; font-size:0.80em; margin-top:8px;">
+      Desperate, in debt, or both? Find us on LinkedIn — we'll bring coffee ☕ and croissants 🥐
+    </span>
   </div>
 </div>
       </section>
@@ -2303,6 +2404,67 @@ If you see the connection with Salesforce documentation, that's intentional.
 You can go fast <em>now</em>,<br>
 but you'll pay <strong>interest every month</strong>.<br>
 Until repayment... or bankruptcy.</div>
+</div>
+
+<!-- ── SOQL Query 1 — Visualforce usage ── -->
+<div id="soql-vf" class="popup-overlay" style="position:fixed; top:24px; right:32px; background:#EFF6FF; border:2px solid #1D4ED8; border-radius:10px; padding:14px 32px 14px 22px; color:#1E3A8A; font-size:21px; z-index:999; box-shadow:0 4px 16px rgba(0,0,0,0.18); max-width:420px; line-height:1.7;">
+  <button onclick="hidePopup('soql-vf')" style="position:absolute;top:6px;right:8px;background:none;border:none;cursor:pointer;font-size:23px;color:#1E3A8A;opacity:0.5;line-height:1;" title="Close">&#x2715;</button>
+  <div class="popup-teaser">
+    🚨 <strong>This query MUST run on a Production org.</strong><br>
+    <span style="font-size:0.82em;font-weight:400;"><code style="font-size:0.85em;">VisualforceAccessMetrics</code> is only populated in Prod — Sandbox data is empty.</span>
+    <span class="popup-more-hint" style="font-size:0.72em;opacity:0.55;display:block;margin-top:5px;">&#9654; see second query on next click</span>
+  </div>
+  <div id="soql-vf-body" class="popup-body" style="display:none">
+    <p style="font-size:0.82em;margin:8px 0 4px;">A page <strong>absent from results = not used since Summer '17</strong>.<br>Cross-reference with all pages to spot the dead ones:</p>
+    <pre style="margin:0 0 10px;font-size:0.66em;background:#1E293B;border-radius:6px;padding:8px 12px;color:#E2E8F0;white-space:pre-wrap;">SELECT Id, Name FROM ApexPage ORDER BY Name</pre>
+    <p style="font-size:0.82em;margin:0;color:#1E3A8A;">
+      📋 Pages in <code style="font-size:0.85em;">ApexPage</code> <strong>but not</strong> in <code style="font-size:0.85em;">VisualforceAccessMetrics</code><br>
+      = zero recorded access since <strong>Summer '17</strong><br>
+      = strong candidates for decommissioning.
+    </p>
+  </div>
+</div>
+
+<!-- ── SOQL Query 2 — Orphan layouts ── -->
+<div id="soql-layout" class="popup-overlay" style="position:fixed; top:24px; right:32px; background:#F0FDF4; border:2px solid #16A34A; border-radius:10px; padding:14px 32px 14px 22px; color:#14532D; font-size:21px; z-index:999; box-shadow:0 4px 16px rgba(0,0,0,0.18); max-width:440px; line-height:1.7;">
+  <button onclick="hidePopup('soql-layout')" style="position:absolute;top:6px;right:8px;background:none;border:none;cursor:pointer;font-size:23px;color:#14532D;opacity:0.5;line-height:1;" title="Close">&#x2715;</button>
+  <div class="popup-teaser">
+    🔍 <strong>First, find profiles with no active users.</strong><br>
+    <span style="font-size:0.82em;font-weight:400;">Their IDs feed the <code style="font-size:0.85em;">IN</code> clause of the main query.</span>
+    <span class="popup-more-hint" style="font-size:0.72em;opacity:0.55;display:block;margin-top:5px;">&#9654; see prerequisite query on next click</span>
+  </div>
+  <div id="soql-layout-body" class="popup-body" style="display:none">
+    <p style="font-size:0.82em;margin:8px 0 6px;color:#14532D;">Run this first to get the <strong>Profile IDs with no active users</strong>:</p>
+    <pre style="margin:0 0 10px;font-size:0.66em;background:#1E293B;border-radius:6px;padding:8px 12px;color:#E2E8F0;white-space:pre-wrap;">SELECT Id FROM Profile
+WHERE Id NOT IN (
+  SELECT ProfileId FROM User
+  WHERE IsActive = true
+)</pre>
+    <p style="font-size:0.82em;margin:0;color:#14532D;">
+      📋 Copy the returned IDs and replace <code style="font-size:0.85em;">'Id1','Id2','Id3'</code><br>
+      in the <code style="font-size:0.85em;">ProfileId IN (...)</code> clause of the main query.<br>
+      Layouts returned = <strong>safe to decommission.</strong>
+    </p>
+  </div>
+</div>
+
+<!-- ── SOQL Query 3 — Metadata dependencies ── -->
+<div id="soql-dep" class="popup-overlay" style="position:fixed; top:24px; right:32px; background:#F0FDF4; border:2px solid #16A34A; border-radius:10px; padding:14px 32px 14px 22px; color:#14532D; font-size:21px; z-index:999; box-shadow:0 4px 16px rgba(0,0,0,0.18); max-width:440px; line-height:1.7;">
+  <button onclick="hidePopup('soql-dep')" style="position:absolute;top:6px;right:8px;background:none;border:none;cursor:pointer;font-size:23px;color:#14532D;opacity:0.5;line-height:1;" title="Close">&#x2715;</button>
+  <div class="popup-teaser">
+    🔍 <strong>Useful to spot potentially unused custom fields.</strong><br>
+    <span style="font-size:0.82em;font-weight:400;">But there's a silent trap — read before you run it at scale.</span>
+    <span class="popup-more-hint" style="font-size:0.72em;opacity:0.55;display:block;margin-top:5px;">&#9654; see the limit on next click</span>
+  </div>
+  <div id="soql-dep-body" class="popup-body" style="display:none">
+    <p style="font-size:0.82em;margin:8px 0 8px;color:#14532D;">
+      ⚠️ <strong>Hard limit: 2,000 records max.</strong><br>
+      Beyond that, results are <strong>silently truncated</strong> —<br>no warning, no error, no indication anything is missing.
+    </p>
+    <p style="font-size:0.82em;margin:0;color:#14532D;">
+      📦 <strong>Run in small batches</strong> — inject a handful of field IDs at a time into <code style="font-size:0.85em;">MetadataComponentId IN (...)</code>, not the entire org at once.
+    </p>
+  </div>
 </div>
 
 <!-- ── AI Argument Generator popup ── -->
@@ -2333,21 +2495,34 @@ Until repayment... or bankruptcy.</div>
     <button class="dt-modal-close" onclick="closeTypeModal('modal-automation')">&#x2715;</button>
     <div class="dt-modal-header"><span class="dt-modal-icon">⚙️</span><span class="dt-modal-title">Automation Debt</span></div>
     <div class="dt-modal-oneliner">Overlapping automations that nobody dares to touch.</div>
-    <div class="dt-modal-section"><div class="dt-modal-section-title">When you see it</div>
-      <ul class="dt-modal-list">
-        <li>A record update triggers the same email twice</li>
-        <li>A Flow fails with <code>CANNOT_INSERT_UPDATE_ACTIVATE_ENTITY</code> — recursive trigger</li>
-        <li>Disabling one Process Builder breaks something completely unrelated</li>
-        <li>Nobody knows which automation runs first</li>
-      </ul>
-    </div>
-    <div class="dt-modal-section"><div class="dt-modal-section-title">How to address it</div>
-      <ul class="dt-modal-list dt-modal-list--fix">
-        <li>Audit with Salesforce Optimizer + Flow list view — map all automations per object</li>
-        <li>Enforce one entry-point Flow per object per trigger context (before / after save)</li>
-        <li>Retire Process Builders and Workflow Rules — migrate into record-triggered Flows</li>
-        <li>Document execution order inline in Flow descriptions</li>
-      </ul>
+    <div class="dt-modal-section">
+      <div class="dt-modal-pair-headers">
+        <div class="dt-modal-section-title">When you see it</div>
+        <div></div>
+        <div class="dt-modal-section-title">How to address it</div>
+      </div>
+      <div class="dt-modal-pairs">
+        <div class="dt-modal-pair-row">
+          <div class="dt-modal-cell-when">A record update triggers the same email twice</div>
+          <div class="dt-modal-pair-arrow">→</div>
+          <div class="dt-modal-cell-fix">Audit with Salesforce Optimizer + Flow list view — map all automations per object</div>
+        </div>
+        <div class="dt-modal-pair-row">
+          <div class="dt-modal-cell-when">A Flow fails with <code>CANNOT_INSERT_UPDATE_ACTIVATE_ENTITY</code> — recursive trigger</div>
+          <div class="dt-modal-pair-arrow">→</div>
+          <div class="dt-modal-cell-fix">Enforce one entry-point Flow per object per trigger context (before / after save)</div>
+        </div>
+        <div class="dt-modal-pair-row">
+          <div class="dt-modal-cell-when">Disabling one Process Builder breaks something completely unrelated</div>
+          <div class="dt-modal-pair-arrow">→</div>
+          <div class="dt-modal-cell-fix">Retire Process Builders and Workflow Rules — migrate into record-triggered Flows</div>
+        </div>
+        <div class="dt-modal-pair-row">
+          <div class="dt-modal-cell-when">Nobody knows which automation runs first</div>
+          <div class="dt-modal-pair-arrow">→</div>
+          <div class="dt-modal-cell-fix">Document execution order inline in Flow descriptions</div>
+        </div>
+      </div>
     </div>
     <div class="dt-modal-section"><div class="dt-modal-section-title">Key concepts</div>
       <div class="dt-modal-tags">
@@ -2362,21 +2537,34 @@ Until repayment... or bankruptcy.</div>
     <button class="dt-modal-close" onclick="closeTypeModal('modal-architecture')">&#x2715;</button>
     <div class="dt-modal-header"><span class="dt-modal-icon">🏗️</span><span class="dt-modal-title">Architecture Debt</span></div>
     <div class="dt-modal-oneliner">Design decisions that were made without a target architecture — and now constrain the whole Salesforce ecosystem.</div>
-    <div class="dt-modal-section"><div class="dt-modal-section-title">When you see it</div>
-      <ul class="dt-modal-list">
-        <li>Multiple systems update the same Salesforce record with no clear system of record</li>
-        <li>Integrations are point-to-point instead of going through a controlled integration layer</li>
-        <li>A small change in Salesforce unexpectedly breaks another system</li>
-        <li>The same capability is rebuilt several times by different teams</li>
-      </ul>
-    </div>
-    <div class="dt-modal-section"><div class="dt-modal-section-title">How to address it</div>
-      <ul class="dt-modal-list dt-modal-list--fix">
-        <li>Define explicit system-of-record ownership per domain</li>
-        <li>Introduce standardized API-first or event-driven integration patterns</li>
-        <li>Reduce coupling and document dependencies between systems</li>
-        <li>Create reusable reference architectures and shared components</li>
-      </ul>
+    <div class="dt-modal-section">
+      <div class="dt-modal-pair-headers">
+        <div class="dt-modal-section-title">When you see it</div>
+        <div></div>
+        <div class="dt-modal-section-title">How to address it</div>
+      </div>
+      <div class="dt-modal-pairs">
+        <div class="dt-modal-pair-row">
+          <div class="dt-modal-cell-when">Multiple systems update the same Salesforce record with no clear system of record</div>
+          <div class="dt-modal-pair-arrow">→</div>
+          <div class="dt-modal-cell-fix">Define explicit system-of-record ownership per domain</div>
+        </div>
+        <div class="dt-modal-pair-row">
+          <div class="dt-modal-cell-when">Integrations are point-to-point instead of going through a controlled integration layer</div>
+          <div class="dt-modal-pair-arrow">→</div>
+          <div class="dt-modal-cell-fix">Introduce standardized API-first or event-driven integration patterns</div>
+        </div>
+        <div class="dt-modal-pair-row">
+          <div class="dt-modal-cell-when">A small change in Salesforce unexpectedly breaks another system</div>
+          <div class="dt-modal-pair-arrow">→</div>
+          <div class="dt-modal-cell-fix">Reduce coupling and document dependencies between systems</div>
+        </div>
+        <div class="dt-modal-pair-row">
+          <div class="dt-modal-cell-when">The same capability is rebuilt several times by different teams</div>
+          <div class="dt-modal-pair-arrow">→</div>
+          <div class="dt-modal-cell-fix">Create reusable reference architectures and shared components</div>
+        </div>
+      </div>
     </div>
     <div class="dt-modal-section"><div class="dt-modal-section-title">Key concepts</div>
       <div class="dt-modal-tags">
@@ -2391,21 +2579,34 @@ Until repayment... or bankruptcy.</div>
     <button class="dt-modal-close" onclick="closeTypeModal('modal-datamodel')">&#x2715;</button>
     <div class="dt-modal-header"><span class="dt-modal-icon">📊</span><span class="dt-modal-title">Data Model Debt</span></div>
     <div class="dt-modal-oneliner">Fields and picklists that have outlived their usefulness — and nobody knows which ones.</div>
-    <div class="dt-modal-section"><div class="dt-modal-section-title">When you see it</div>
-      <ul class="dt-modal-list">
-        <li>Picklist reports show 15 variations of what should be 3 values</li>
-        <li>Page layouts so crowded that users scroll past the fields they need</li>
-        <li>Nobody can safely delete a field without a full dependency check</li>
-        <li>Dashboards vary wildly depending on which status field you use</li>
-      </ul>
-    </div>
-    <div class="dt-modal-section"><div class="dt-modal-section-title">How to address it</div>
-      <ul class="dt-modal-list dt-modal-list--fix">
-        <li>Field Usage Analytics (Setup): fields with zero population are safe candidates</li>
-        <li>Standardize picklist values — define a canonical list, use Global Value Sets</li>
-        <li>Establish a "create field" process: description, owner, and review required</li>
-        <li>Use Field-Level Security to hide irrelevant fields rather than delete immediately</li>
-      </ul>
+    <div class="dt-modal-section">
+      <div class="dt-modal-pair-headers">
+        <div class="dt-modal-section-title">When you see it</div>
+        <div></div>
+        <div class="dt-modal-section-title">How to address it</div>
+      </div>
+      <div class="dt-modal-pairs">
+        <div class="dt-modal-pair-row">
+          <div class="dt-modal-cell-when">Picklist reports show 15 variations of what should be 3 values</div>
+          <div class="dt-modal-pair-arrow">→</div>
+          <div class="dt-modal-cell-fix">Standardize picklist values — define a canonical list, use Global Value Sets</div>
+        </div>
+        <div class="dt-modal-pair-row">
+          <div class="dt-modal-cell-when">Page layouts so crowded that users scroll past the fields they need</div>
+          <div class="dt-modal-pair-arrow">→</div>
+          <div class="dt-modal-cell-fix">Use Field-Level Security to hide irrelevant fields rather than delete immediately</div>
+        </div>
+        <div class="dt-modal-pair-row">
+          <div class="dt-modal-cell-when">Nobody can safely delete a field without a full dependency check</div>
+          <div class="dt-modal-pair-arrow">→</div>
+          <div class="dt-modal-cell-fix">Field Usage Analytics (Setup): fields with zero population are safe candidates</div>
+        </div>
+        <div class="dt-modal-pair-row">
+          <div class="dt-modal-cell-when">Dashboards vary wildly depending on which status field you use</div>
+          <div class="dt-modal-pair-arrow">→</div>
+          <div class="dt-modal-cell-fix">Establish a "create field" process: description, owner, and review required</div>
+        </div>
+      </div>
     </div>
     <div class="dt-modal-section"><div class="dt-modal-section-title">Key concepts</div>
       <div class="dt-modal-tags">
@@ -2420,21 +2621,34 @@ Until repayment... or bankruptcy.</div>
     <button class="dt-modal-close" onclick="closeTypeModal('modal-apex')">&#x2715;</button>
     <div class="dt-modal-header"><span class="dt-modal-icon">💻</span><span class="dt-modal-title">Apex Code Debt</span></div>
     <div class="dt-modal-oneliner">Code that works today but will break tomorrow — and has no safety net.</div>
-    <div class="dt-modal-section"><div class="dt-modal-section-title">When you see it</div>
-      <ul class="dt-modal-list">
-        <li>A deployment fails because unrelated tests suddenly break</li>
-        <li>A new requirement means rewriting the trigger from scratch</li>
-        <li>A nightly batch fails in production after a data import</li>
-        <li>Nobody wants to modify the trigger — "it's too risky"</li>
-      </ul>
-    </div>
-    <div class="dt-modal-section"><div class="dt-modal-section-title">How to address it</div>
-      <ul class="dt-modal-list dt-modal-list--fix">
-        <li>Adopt the Trigger Handler pattern (fflib, Kevin O'Hara): one trigger per object</li>
-        <li>Write meaningful tests: assert specific field values and error conditions</li>
-        <li>Bulkify everything: SOQL and DML always outside loops — use collections and maps</li>
-        <li>Introduce a service layer to isolate business logic from trigger context</li>
-      </ul>
+    <div class="dt-modal-section">
+      <div class="dt-modal-pair-headers">
+        <div class="dt-modal-section-title">When you see it</div>
+        <div></div>
+        <div class="dt-modal-section-title">How to address it</div>
+      </div>
+      <div class="dt-modal-pairs">
+        <div class="dt-modal-pair-row">
+          <div class="dt-modal-cell-when">A deployment fails because unrelated tests suddenly break</div>
+          <div class="dt-modal-pair-arrow">→</div>
+          <div class="dt-modal-cell-fix">Write meaningful tests: assert specific field values and error conditions</div>
+        </div>
+        <div class="dt-modal-pair-row">
+          <div class="dt-modal-cell-when">A new requirement means rewriting the trigger from scratch</div>
+          <div class="dt-modal-pair-arrow">→</div>
+          <div class="dt-modal-cell-fix">Adopt the Trigger Handler pattern (fflib, Kevin O'Hara): one trigger per object</div>
+        </div>
+        <div class="dt-modal-pair-row">
+          <div class="dt-modal-cell-when">A nightly batch fails in production after a data import</div>
+          <div class="dt-modal-pair-arrow">→</div>
+          <div class="dt-modal-cell-fix">Bulkify everything: SOQL and DML always outside loops — use collections and maps</div>
+        </div>
+        <div class="dt-modal-pair-row">
+          <div class="dt-modal-cell-when">Nobody wants to modify the trigger — "it's too risky"</div>
+          <div class="dt-modal-pair-arrow">→</div>
+          <div class="dt-modal-cell-fix">Introduce a service layer to isolate business logic from trigger context</div>
+        </div>
+      </div>
     </div>
     <div class="dt-modal-section"><div class="dt-modal-section-title">Key concepts</div>
       <div class="dt-modal-tags">
@@ -2449,22 +2663,39 @@ Until repayment... or bankruptcy.</div>
     <button class="dt-modal-close" onclick="closeTypeModal('modal-integration')">&#x2715;</button>
     <div class="dt-modal-header"><span class="dt-modal-icon">🔗</span><span class="dt-modal-title">Integration Debt</span></div>
     <div class="dt-modal-oneliner">External systems connected by fragile assumptions rather than solid contracts.</div>
-    <div class="dt-modal-section"><div class="dt-modal-section-title">When you see it</div>
-      <ul class="dt-modal-list">
-        <li>A sandbox refresh breaks several integrations immediately</li>
-        <li>An API version deprecation notice triggers emergency work across multiple teams</li>
-        <li>Failed syncs are discovered by end users, not by monitoring</li>
-        <li>Credentials stored as plaintext in custom fields or Apex constants</li>
-      </ul>
-    </div>
-    <div class="dt-modal-section"><div class="dt-modal-section-title">How to address it</div>
-      <ul class="dt-modal-list dt-modal-list--fix">
-        <li>Never hardcode Record IDs — use External IDs, Named Credentials, or Custom Metadata</li>
-        <li>Pin to a recent, stable API version — establish a yearly review process</li>
-        <li>Log failures to a custom object, alert via Platform Events or email</li>
-        <li>Use Named Credentials for all authentication — no credentials in code</li>
-        <li>Document every integration: source, target, trigger, frequency, owner</li>
-      </ul>
+    <div class="dt-modal-section">
+      <div class="dt-modal-pair-headers">
+        <div class="dt-modal-section-title">When you see it</div>
+        <div></div>
+        <div class="dt-modal-section-title">How to address it</div>
+      </div>
+      <div class="dt-modal-pairs">
+        <div class="dt-modal-pair-row">
+          <div class="dt-modal-cell-when">A sandbox refresh breaks several integrations immediately</div>
+          <div class="dt-modal-pair-arrow">→</div>
+          <div class="dt-modal-cell-fix">Never hardcode Record IDs — use External IDs, Named Credentials, or Custom Metadata</div>
+        </div>
+        <div class="dt-modal-pair-row">
+          <div class="dt-modal-cell-when">An API version deprecation notice triggers emergency work across multiple teams</div>
+          <div class="dt-modal-pair-arrow">→</div>
+          <div class="dt-modal-cell-fix">Pin to a recent, stable API version — establish a yearly review process</div>
+        </div>
+        <div class="dt-modal-pair-row">
+          <div class="dt-modal-cell-when">Failed syncs are discovered by end users, not by monitoring</div>
+          <div class="dt-modal-pair-arrow">→</div>
+          <div class="dt-modal-cell-fix">Log failures to a custom object, alert via Platform Events or email</div>
+        </div>
+        <div class="dt-modal-pair-row">
+          <div class="dt-modal-cell-when">Credentials stored as plaintext in custom fields or Apex constants</div>
+          <div class="dt-modal-pair-arrow">→</div>
+          <div class="dt-modal-cell-fix">Use Named Credentials for all authentication — no credentials in code</div>
+        </div>
+        <div class="dt-modal-pair-row">
+          <div class="dt-modal-cell-empty"></div>
+          <div class="dt-modal-pair-arrow">+</div>
+          <div class="dt-modal-cell-fix">Document every integration: source, target, trigger, frequency, owner</div>
+        </div>
+      </div>
     </div>
     <div class="dt-modal-section"><div class="dt-modal-section-title">Key concepts</div>
       <div class="dt-modal-tags">
@@ -2479,21 +2710,34 @@ Until repayment... or bankruptcy.</div>
     <button class="dt-modal-close" onclick="closeTypeModal('modal-governance')">&#x2715;</button>
     <div class="dt-modal-header"><span class="dt-modal-icon">📋</span><span class="dt-modal-title">Governance Debt</span></div>
     <div class="dt-modal-oneliner">An org where anyone can change anything, anytime, in any way they like.</div>
-    <div class="dt-modal-section"><div class="dt-modal-section-title">When you see it</div>
-      <ul class="dt-modal-list">
-        <li>Onboarding a new developer takes weeks just to understand the naming conventions</li>
-        <li>Two teams create near-identical custom fields because neither knew the other existed</li>
-        <li>A Flow is modified in production "just to test something quickly" — and breaks downstream</li>
-        <li>Setup audit trail shows dozens of unexplained changes per day from multiple admins</li>
-      </ul>
-    </div>
-    <div class="dt-modal-section"><div class="dt-modal-section-title">How to address it</div>
-      <ul class="dt-modal-list dt-modal-list--fix">
-        <li>Define and enforce naming conventions for all metadata — document in a living wiki</li>
-        <li>Make descriptions mandatory: no deployment without a description on every new element</li>
-        <li>Introduce a deployment pipeline: Sandbox → UAT → Production with change tracking</li>
-        <li>Use a CHANGELOG or Jira — every org change traceable to a request and a person</li>
-      </ul>
+    <div class="dt-modal-section">
+      <div class="dt-modal-pair-headers">
+        <div class="dt-modal-section-title">When you see it</div>
+        <div></div>
+        <div class="dt-modal-section-title">How to address it</div>
+      </div>
+      <div class="dt-modal-pairs">
+        <div class="dt-modal-pair-row">
+          <div class="dt-modal-cell-when">Onboarding a new developer takes weeks just to understand the naming conventions</div>
+          <div class="dt-modal-pair-arrow">→</div>
+          <div class="dt-modal-cell-fix">Define and enforce naming conventions for all metadata — document in a living wiki</div>
+        </div>
+        <div class="dt-modal-pair-row">
+          <div class="dt-modal-cell-when">Two teams create near-identical custom fields because neither knew the other existed</div>
+          <div class="dt-modal-pair-arrow">→</div>
+          <div class="dt-modal-cell-fix">Make descriptions mandatory: no deployment without a description on every new element</div>
+        </div>
+        <div class="dt-modal-pair-row">
+          <div class="dt-modal-cell-when">A Flow is modified in production "just to test something quickly" — and breaks downstream</div>
+          <div class="dt-modal-pair-arrow">→</div>
+          <div class="dt-modal-cell-fix">Introduce a deployment pipeline: Sandbox → UAT → Production with change tracking</div>
+        </div>
+        <div class="dt-modal-pair-row">
+          <div class="dt-modal-cell-when">Setup audit trail shows dozens of unexplained changes per day from multiple admins</div>
+          <div class="dt-modal-pair-arrow">→</div>
+          <div class="dt-modal-cell-fix">Use a CHANGELOG or Jira — every org change traceable to a request and a person</div>
+        </div>
+      </div>
     </div>
     <div class="dt-modal-section"><div class="dt-modal-section-title">Key concepts</div>
       <div class="dt-modal-tags">
@@ -2508,22 +2752,39 @@ Until repayment... or bankruptcy.</div>
     <button class="dt-modal-close" onclick="closeTypeModal('modal-security')">&#x2715;</button>
     <div class="dt-modal-header"><span class="dt-modal-icon">🔐</span><span class="dt-modal-title">Security Debt</span></div>
     <div class="dt-modal-oneliner">The most dangerous type — because nothing breaks until it's too late.</div>
-    <div class="dt-modal-section"><div class="dt-modal-section-title">When you see it</div>
-      <ul class="dt-modal-list">
-        <li>Standard users can see or edit records they have no business reason to access</li>
-        <li>A Connected App from a vendor the company no longer works with is still active</li>
-        <li>A data leak can't be traced — audit trail history has already rolled over (180-day limit)</li>
-        <li>Sensitive fields (salary, SSN, contract value) are visible to all profiles</li>
-      </ul>
-    </div>
-    <div class="dt-modal-section"><div class="dt-modal-section-title">How to address it</div>
-      <ul class="dt-modal-list dt-modal-list--fix">
-        <li>Audit profiles and permission sets — use Strongpoint or Own Security scanner</li>
-        <li>Apply least privilege: start from zero access, grant only what is explicitly needed</li>
-        <li>Review Connected Apps quarterly — revoke any app unused for 90+ days</li>
-        <li>Restrict OAuth scopes — no app should request full API access unless required</li>
-        <li>Export Setup Audit Trail regularly — before the 180-day window rolls over</li>
-      </ul>
+    <div class="dt-modal-section">
+      <div class="dt-modal-pair-headers">
+        <div class="dt-modal-section-title">When you see it</div>
+        <div></div>
+        <div class="dt-modal-section-title">How to address it</div>
+      </div>
+      <div class="dt-modal-pairs">
+        <div class="dt-modal-pair-row">
+          <div class="dt-modal-cell-when">Standard users can see or edit records they have no business reason to access</div>
+          <div class="dt-modal-pair-arrow">→</div>
+          <div class="dt-modal-cell-fix">Audit profiles and permission sets — use Strongpoint or Own Security scanner</div>
+        </div>
+        <div class="dt-modal-pair-row">
+          <div class="dt-modal-cell-when">A Connected App from a vendor the company no longer works with is still active</div>
+          <div class="dt-modal-pair-arrow">→</div>
+          <div class="dt-modal-cell-fix">Review Connected Apps quarterly — revoke any app unused for 90+ days</div>
+        </div>
+        <div class="dt-modal-pair-row">
+          <div class="dt-modal-cell-when">A data leak can't be traced — audit trail history has already rolled over (180-day limit)</div>
+          <div class="dt-modal-pair-arrow">→</div>
+          <div class="dt-modal-cell-fix">Export Setup Audit Trail regularly — before the 180-day window rolls over</div>
+        </div>
+        <div class="dt-modal-pair-row">
+          <div class="dt-modal-cell-when">Sensitive fields (salary, SSN, contract value) are visible to all profiles</div>
+          <div class="dt-modal-pair-arrow">→</div>
+          <div class="dt-modal-cell-fix">Restrict OAuth scopes — no app should request full API access unless required</div>
+        </div>
+        <div class="dt-modal-pair-row">
+          <div class="dt-modal-cell-empty"></div>
+          <div class="dt-modal-pair-arrow">+</div>
+          <div class="dt-modal-cell-fix">Apply least privilege: start from zero access, grant only what is explicitly needed</div>
+        </div>
+      </div>
     </div>
     <div class="dt-modal-section"><div class="dt-modal-section-title">Key concepts</div>
       <div class="dt-modal-tags">
@@ -2598,6 +2859,7 @@ you have a plan. And you know where to start. ✅</div>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/markdown/markdown.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/notes/notes.js"></script>
   <script>
     const POPUPS = [
@@ -2660,7 +2922,30 @@ you have a plan. And you know where to start. ✅</div>
     });
 
     // ── Popup management ──────────────────────────────────────────────────
+    var _suppressPopups = false;
+
+    var _soqlActiveClass = { 'soql-vf': 'soql-block-active-blue', 'soql-layout': 'soql-block-active-green', 'soql-dep': 'soql-block-active-green' };
+
+    function _soqlHighlight(popupId) {
+      var activeBlock = 'soql-block-' + popupId.replace('soql-', '');
+      Object.keys(_soqlActiveClass).forEach(function(id) {
+        var el = document.getElementById('soql-block-' + id.replace('soql-', ''));
+        if (!el) return;
+        el.classList.remove('soql-block-dimmed', 'soql-block-active-blue', 'soql-block-active-green');
+        if (el.id === activeBlock) el.classList.add(_soqlActiveClass[popupId]);
+        else el.classList.add('soql-block-dimmed');
+      });
+    }
+
+    function _soqlReset() {
+      Object.keys(_soqlActiveClass).forEach(function(id) {
+        var el = document.getElementById('soql-block-' + id.replace('soql-', ''));
+        if (el) el.classList.remove('soql-block-dimmed', 'soql-block-active-blue', 'soql-block-active-green');
+      });
+    }
+
     function _popupShow(id) {
+      if (_suppressPopups) return;
       var el = document.getElementById(id);
       if (!el) return;
       var body = document.getElementById(id + '-body');
@@ -2671,6 +2956,11 @@ you have a plan. And you know where to start. ✅</div>
       requestAnimationFrame(function() {
         requestAnimationFrame(function() { el.classList.add('popup-visible'); });
       });
+      if (id === 'soql-vf') {
+        var b = document.getElementById('badge-prod-vf');
+        if (b) b.classList.remove('badge-prod-done');
+      }
+      if (_soqlActiveClass[id]) _soqlHighlight(id);
     }
 
     function _popupExpand(id) {
@@ -2791,6 +3081,11 @@ you have a plan. And you know where to start. ✅</div>
         var hint = el.querySelector('.popup-more-hint');
         if (hint) hint.style.display = '';
       }, 350);
+      if (id === 'soql-vf') {
+        var b = document.getElementById('badge-prod-vf');
+        if (b) b.classList.add('badge-prod-done');
+      }
+      if (_soqlActiveClass[id]) _soqlReset();
     }
 
     function _hideAllPopups() {
@@ -2802,6 +3097,7 @@ you have a plan. And you know where to start. ✅</div>
         var body = document.getElementById(p.id + '-body');
         if (body) { body.style.display = 'none'; delete body.dataset.expanded; }
       });
+      _soqlReset();
     }
 
     window._fragmentAnims = window._fragmentAnims || {};
@@ -2824,9 +3120,13 @@ you have a plan. And you know where to start. ✅</div>
       for (var i = 1; i <= 5; i++) _afHideMsg(i);
     }
 
-    Reveal.on('ready', function() { _hideAllPopups(); _afReset(); });
+    Reveal.on('ready', function() {
+      _hideAllPopups(); _afReset();
+    });
 
     Reveal.on('slidechanged', function(e) {
+      _suppressPopups = true;
+      setTimeout(function() { _suppressPopups = false; }, 300);
       _afReset();
       _hideAllPopups();
       _closeAllTypeModals();
@@ -2982,6 +3282,218 @@ you have a plan. And you know where to start. ✅</div>
       </div>
     </div>
   </div>
+
+<!-- ── Pacing Timer ──────────────────────────────────────────────────── -->
+<style>
+  #pt-widget {
+    position: fixed;
+    bottom: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 13px;
+    background: rgba(10,12,20,0.82);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    padding: 8px 13px;
+    color: #e2e8f0;
+    backdrop-filter: blur(6px);
+    min-width: 130px;
+    user-select: none;
+    transition: border-color 0.4s;
+  }
+  #pt-widget.pt-warn  { border-color: #f59e0b; }
+  #pt-widget.pt-alert { border-color: #ef4444; background: rgba(50,5,5,0.88); }
+
+  #pt-row1 { display: flex; align-items: baseline; gap: 6px; }
+  #pt-elapsed  { font-size: 1.15em; font-weight: 700; }
+  #pt-sep      { color: #475569; }
+  #pt-expected { color: #64748b; }
+  #pt-delta    {
+    margin-left: 4px; padding: 1px 5px;
+    border-radius: 3px; font-weight: 700;
+    background: rgba(255,255,255,0.07);
+  }
+  .pt-ok    { color: #4ade80; }
+  .pt-warn  { color: #fbbf24; }
+  .pt-alert { color: #f87171; }
+
+  #pt-debug-badge {
+    display: none;
+    font-size: 0.65em; font-weight: 800;
+    letter-spacing: 0.12em; color: #fbbf24;
+    margin-bottom: 3px;
+  }
+  #pt-debug-row {
+    display: none;
+    margin-top: 5px; padding-top: 5px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    font-size: 0.8em; color: #94a3b8;
+    flex-direction: column; gap: 2px;
+  }
+  #pt-widget.pt-debug #pt-debug-badge { display: block; }
+  #pt-widget.pt-debug #pt-debug-row   { display: flex; }
+
+  #pt-slide-info {
+    position: fixed;
+    bottom: 40px;
+    left: 8px;
+    z-index: 9999;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 12px;
+    background: rgba(10,12,20,0.75);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 5px;
+    padding: 3px 10px;
+    color: #e2e8f0;
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    user-select: none;
+  }
+  #pt-si-remaining { font-weight: 700; }
+</style>
+
+<div id="pt-slide-info">
+  <span id="pt-si-remaining">—</span>
+</div>
+
+<div id="pt-widget" style="display:none">
+  <div id="pt-debug-badge">● DEBUG  [D] toggle</div>
+  <div id="pt-row1">
+    <span id="pt-elapsed">0:00</span>
+    <span id="pt-sep">/</span>
+    <span id="pt-expected">0:00</span>
+    <span id="pt-delta">+0s</span>
+  </div>
+  <div id="pt-debug-row">
+    <span id="pt-dbg-slide">slide —</span>
+    <span id="pt-dbg-target">target — s</span>
+  </div>
+</div>
+
+<script>
+(function () {
+  var PT_SHOW_DELAY  = 30;
+  var PT_WARN_DELTA  = 10;
+  var PT_ALERT_DELTA = 30;
+
+  var PT_DURS = [
+    15, 15, 90, 10,120, 60,120, 60, 10, 60,
+    60, 60, 60, 60, 90, 90, 10, 90, 60, 60,
+    60, 60, 60, 60, 10, 60, 60, 45, 45, 45,
+    45, 45, 10, 60, 60, 90, 45, 45, 90, 30,
+     0,  0
+  ];
+
+  // PT_CUM[i] = seconds elapsed since slide 1 when arriving on slide i
+  // PT_CUM[i] = budget total écoulé pour avoir le droit de quitter le slide i
+  // ex: PT_CUM[1]=15, PT_CUM[2]=105, PT_CUM[3]=115...
+  var PT_CUM = (function () {
+    var a = new Array(PT_DURS.length).fill(0);
+    for (var i = 1; i < a.length; i++) a[i] = a[i - 1] + PT_DURS[i];
+    return a;
+  })();
+
+  var ptWall           = null;
+  var ptSlideEntryWall = null;
+  var ptIdx            = 0;
+  var ptStarted        = false;
+  var ptDebug          = false;
+  var ptTick           = null;
+  var W                = document.getElementById('pt-widget');
+
+  function fmt(s) {
+    var a = Math.abs(Math.round(s));
+    return Math.floor(a / 60) + ':' + String(a % 60).padStart(2, '0');
+  }
+  function fmtDelta(s) {
+    var a = Math.abs(Math.round(s)), sign = s >= 0 ? '+' : '-';
+    var m = Math.floor(a / 60);
+    return sign + (m > 0 ? m + ':' + String(a % 60).padStart(2, '0') : (a % 60) + 's');
+  }
+
+  function render() {
+    if (!ptStarted) {
+      W.style.display = ptDebug ? '' : 'none';
+      if (ptDebug) {
+        document.getElementById('pt-dbg-slide').textContent  = 'slide ' + ptIdx + ' — en attente';
+        document.getElementById('pt-dbg-target').textContent = 'timer démarre au slide 1';
+      }
+      return;
+    }
+    var elapsed  = (Date.now() - ptWall) / 1000;
+    var expected = PT_CUM[ptIdx] || 0;
+    var delta    = elapsed - expected;
+
+    W.style.display = (ptDebug || delta > 0) ? '' : 'none';
+
+    document.getElementById('pt-elapsed').textContent  = fmt(elapsed);
+    document.getElementById('pt-expected').textContent = fmt(expected);
+
+    var dEl = document.getElementById('pt-delta');
+    dEl.textContent = fmtDelta(delta);
+    dEl.className   = delta >= PT_ALERT_DELTA ? 'pt-alert'
+                    : delta >= PT_WARN_DELTA  ? 'pt-warn'
+                    : 'pt-ok';
+
+    W.classList.toggle('pt-alert', delta >= PT_ALERT_DELTA);
+    W.classList.toggle('pt-warn',  delta >= PT_WARN_DELTA && delta < PT_ALERT_DELTA);
+
+    if (ptDebug) {
+      document.getElementById('pt-dbg-slide').textContent  = 'slide ' + ptIdx;
+      document.getElementById('pt-dbg-target').textContent =
+        'target ' + (PT_DURS[ptIdx] || 0) + 's  ·  cum ' + fmt(expected);
+    }
+
+  }
+
+  function updateSlideRemaining() {
+    var dur = PT_DURS[ptIdx] || 0;
+    var el  = document.getElementById('pt-si-remaining');
+    if (dur === 0) { el.textContent = '—'; el.style.color = '#64748b'; return; }
+    var combined = ptStarted
+      ? Math.round(PT_CUM[ptIdx] - (Date.now() - ptWall) / 1000)
+      : dur;
+    el.textContent = combined + 's';
+    el.style.color = combined <= 0             ? '#f87171'
+                   : combined <= PT_WARN_DELTA ? '#fbbf24'
+                   : '#4ade80';
+  }
+
+  function onSlide(idx) {
+    ptIdx            = idx;
+    ptSlideEntryWall = Date.now();
+    if (!ptStarted && idx >= 1) {
+      ptStarted = true;
+      ptWall    = ptSlideEntryWall;
+      ptTick    = setInterval(function() { render(); updateSlideRemaining(); }, 15000);
+    }
+
+    updateSlideRemaining();
+    render();
+  }
+
+  function toggleDebug() {
+    ptDebug = !ptDebug;
+    W.classList.toggle('pt-debug', ptDebug);
+    render();
+  }
+
+  Reveal.on('ready',        function (e) { onSlide(e.indexh || 0); });
+  Reveal.on('slidechanged', function (e) { onSlide(e.indexh || 0); });
+
+  document.addEventListener('keydown', function (e) {
+    if ((e.key === 'd' || e.key === 'D') && !e.ctrlKey && !e.altKey && !e.metaKey) {
+      var tag = document.activeElement && document.activeElement.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      toggleDebug();
+    }
+  });
+})();
+</script>
 
 </body>
 </html>

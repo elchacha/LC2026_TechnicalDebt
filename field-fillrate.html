@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CustomFields Usage</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+    background: #ffffff; padding: 16px; font-size: 12px; color: #1a1a1a;
+  }
+  .app {
+    background: #ffffff; border-radius: 4px;
+    max-width: 1100px; margin: 0 auto; overflow: hidden;
+  }
+
+  /* ── Header ── */
+  .app-header { padding: 7px 12px; background: #fff; border-bottom: 1px solid #ddd;
+    border-radius: 4px 4px 0 0; }
+  .app-title    { font-size: 0.95em; font-weight: 700; color: #1a1a1a; margin-bottom: 2px; }
+  .app-subtitle { font-size: 0.70em; color: #555; }
+
+  /* ── Toolbar ── */
+  .toolbar {
+    padding: 5px 12px; background: #f8f8f8; border-bottom: 1px solid #ddd;
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  }
+  .toolbar-label { font-size: 0.72em; font-weight: 600; color: #444; }
+  .toolbar-input {
+    border: 1px solid #bbb; border-radius: 3px; padding: 3px 6px;
+    font-size: 0.72em; color: #1a1a1a; background: white; min-width: 130px;
+  }
+  .btn { border: none; border-radius: 3px; padding: 4px 10px; font-size: 0.72em; font-weight: 600; cursor: pointer; }
+  .btn-primary   { background: #0070d2; color: white; }
+  .btn-secondary { background: white; border: 1px solid #bbb; color: #1a1a1a; }
+
+  /* ── Stats bar ── */
+  .stats-bar {
+    padding: 5px 12px; background: #fafafa; border-bottom: 1px solid #e5e5e5;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .stats-bar-main { font-size: 0.76em; font-weight: 700; color: #1a1a1a; }
+  .stats-bar select { font-size: 0.70em; border: 1px solid #bbb; border-radius: 3px;
+    padding: 2px 18px 2px 5px; background: white; min-width: 120px; }
+  .stats-bar-actions { display: flex; gap: 5px; margin-left: auto; }
+  .stats-meta { font-size: 0.65em; color: #777; display: flex; gap: 16px;
+    padding: 3px 12px; background: #f5f5f5; border-bottom: 1px solid #e5e5e5; }
+  .stats-meta span { font-style: italic; }
+
+  /* ── Main layout — gap between panels ── */
+  .main { display: flex; gap: 6px; padding: 6px; background: #ffffff; }
+
+  /* ── Table panel ── */
+  .table-wrap {
+    flex: 1; overflow-x: auto; background: white;
+    border-radius: 3px; box-shadow: 0 1px 4px rgba(0,0,0,0.10);
+  }
+  table { width: auto; min-width: 100%; border-collapse: collapse; }
+  thead th {
+    background: #e8e8e8; padding: 5px 10px; text-align: left;
+    font-size: 0.82em; font-weight: 700; color: #333; border-bottom: 2px solid #ccc;
+    white-space: nowrap;
+  }
+  thead th.col-num { text-align: right; }
+  tbody tr { border-bottom: 1px solid #f0f0f0; }
+  tbody tr:hover { background: #f5f9ff; }
+  tbody td { padding: 3px 10px; font-size: 0.82em; color: #1a1a1a; white-space: nowrap; }
+  tbody td.col-num   { text-align: right; color: #444; }
+  tbody td.col-api   { font-family: monospace; font-size: 0.78em; color: #0070d2; }
+  tbody td.col-label { color: #0070d2; }
+
+  tr.highlight-row { background: #e8f4fd !important; }
+  tr.highlight-row td { font-weight: 600; }
+
+  /* Type badges */
+  .badge {
+    display: inline-block; padding: 1px 5px; border-radius: 3px;
+    font-size: 0.63em; font-weight: 600; color: white; text-align: center; min-width: 46px;
+  }
+  .badge-reference { background: #1e4e8c; }
+  .badge-double    { background: #1a7f5a; }
+  .badge-picklist  { background: #d4640a; }
+  .badge-date      { background: #6d28d9; }
+  .badge-string    { background: #0891b2; }
+  .badge-url       { background: #0284c7; }
+
+  /* Score */
+  .score {
+    display: inline-block; padding: 1px 6px; border-radius: 3px;
+    font-size: 0.72em; font-weight: 700; text-align: center; min-width: 34px;
+  }
+  .score-high    { background: #dc2626; color: white; }
+  .score-med     { background: #f97316; color: white; }
+  .score-low     { background: #e5e7eb; color: #6b7280; }
+  .score-perfect { background: #16a34a; color: white; }
+
+  /* ── Right panel ── */
+  .rt-panel {
+    width: 250px; flex-shrink: 0; background: white;
+    border-radius: 3px; box-shadow: 0 1px 4px rgba(0,0,0,0.10);
+  }
+  .rt-header {
+    background: #e8e8e8; padding: 5px 8px; font-size: 0.70em; font-weight: 700;
+    color: #333; border-bottom: 2px solid #ccc; display: flex; gap: 6px;
+  }
+  .rt-col-rt    { flex: 1; }
+  .rt-col-num   { width: 42px; text-align: right; }
+  .rt-col-total { width: 48px; text-align: right; }
+  .rt-row {
+    display: flex; align-items: center; padding: 3px 8px;
+    border-bottom: 1px solid #f0f0f0; font-size: 0.69em; gap: 6px;
+  }
+  .rt-row:hover { background: #f5f9ff; }
+  .rt-row.rt-highlight { background: #fef9c3; font-weight: 700; border-left: 3px solid #f59e0b; }
+  .rt-pct-bar  { height: 3px; margin: 0 8px 3px; background: #e5e7eb; border-radius: 2px; }
+  .rt-pct-fill { height: 3px; border-radius: 2px; }
+
+  /* ── Step highlights ── */
+  .cell-spot {
+    background: #fef08a !important; color: #92400e !important; font-weight: 800 !important;
+    box-shadow: inset 0 0 0 2px #f59e0b;
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+  }
+  .cell-spot .score { outline: 3px solid #f59e0b; outline-offset: 2px; }
+  .panel-spot {
+    box-shadow: 0 0 0 3px #f59e0b, 0 4px 20px rgba(245,158,11,0.35) !important;
+    transition: box-shadow 0.35s ease;
+  }
+  .rt-dim { opacity: 0.25; transition: opacity 0.3s ease; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Header -->
+  <div class="app-header">
+    <div class="app-title">CustomFields Usage</div>
+    <div class="app-subtitle">Analyse custom field usage broken down by Record Type to identify unused or underused fields.</div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <span class="toolbar-label">Object</span>
+    <input class="toolbar-input" type="text" value="Account(Account)" readonly>
+    <button class="btn btn-primary">Display</button>
+    <span class="toolbar-label" style="margin-left:6px">Threads</span>
+    <input class="toolbar-input" type="text" value="25" readonly style="min-width:40px;width:40px">
+    <span style="font-size:0.68em;color:#888">(max 25)</span>
+  </div>
+
+  <!-- Stats bar -->
+  <div class="stats-bar">
+    <span class="stats-bar-main">Account : 5 138 700 records</span>
+    <select><option>— All Record Types —</option></select>
+    <div class="stats-bar-actions">
+      <button class="btn btn-primary">Analyse</button>
+      <button class="btn btn-secondary">Export</button>
+    </div>
+  </div>
+  <div class="stats-meta">
+    <span>Last Analysis : 04/24/2025</span>
+    <span>nb fields : 146</span>
+    <span>execution : 12 mn 15 s</span>
+  </div>
+
+  <!-- Main — gap visible between panels -->
+  <div class="main">
+
+    <!-- Left table -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Field Name</th>
+            <th>Label</th>
+            <th>Last Modified</th>
+            <th>Type</th>
+            <th class="col-num">Usage</th>
+            <th class="col-num">Percent</th>
+            <th class="col-num">Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="col-api">Contact_Ref_1__c</td>
+            <td class="col-label">Primary Contact Reference</td>
+            <td>2025-04-23</td>
+            <td><span class="badge badge-reference">reference</span></td>
+            <td class="col-num">27 800</td><td class="col-num">0.4</td>
+            <td class="col-num"><span class="score score-high">9.0</span></td>
+          </tr>
+          <tr>
+            <td class="col-api">Contact_Ref_2__c</td>
+            <td class="col-label">Secondary Contact Reference</td>
+            <td>2025-04-23</td>
+            <td><span class="badge badge-reference">reference</span></td>
+            <td class="col-num">20 500</td><td class="col-num">0.4</td>
+            <td class="col-num"><span class="score score-high">9.0</span></td>
+          </tr>
+          <tr>
+            <td class="col-api">Metric_Count_1__c</td>
+            <td class="col-label">Activity Count</td>
+            <td>2025-04-22</td>
+            <td><span class="badge badge-double">double</span></td>
+            <td class="col-num">15 800</td><td class="col-num">0.3</td>
+            <td class="col-num"><span class="score score-med">5.0</span></td>
+          </tr>
+          <tr>
+            <td class="col-api">Lookup_Ref_1__c</td>
+            <td class="col-label">Parent Reference</td>
+            <td>2025-04-19</td>
+            <td><span class="badge badge-reference">reference</span></td>
+            <td class="col-num">15 200</td><td class="col-num">0.3</td>
+            <td class="col-num"><span class="score score-low">0.3</span></td>
+          </tr>
+          <tr>
+            <td class="col-api">Contact_Ref_3__c</td>
+            <td class="col-label">Last Contact Reference</td>
+            <td>2025-04-22</td>
+            <td><span class="badge badge-reference">reference</span></td>
+            <td class="col-num">12 000</td><td class="col-num">0.2</td>
+            <td class="col-num"><span class="score score-med">5.0</span></td>
+          </tr>
+          <tr>
+            <td class="col-api">Contact_Ref_4__c</td>
+            <td class="col-label">Main Contact</td>
+            <td>2025-04-24</td>
+            <td><span class="badge badge-reference">reference</span></td>
+            <td class="col-num">8 300</td><td class="col-num">0.2</td>
+            <td class="col-num"><span class="score score-low">1.0</span></td>
+          </tr>
+          <tr>
+            <td class="col-api">Text_Field_1__c</td>
+            <td class="col-label">External Name</td>
+            <td>2025-03-14</td>
+            <td><span class="badge badge-string">string</span></td>
+            <td class="col-num">6 300</td><td class="col-num">0.1</td>
+            <td class="col-num"><span class="score score-low">0.1</span></td>
+          </tr>
+          <tr>
+            <td class="col-api">Media_Field_1__c</td>
+            <td class="col-label">Media URL</td>
+            <td>2025-03-13</td>
+            <td><span class="badge badge-string">string</span></td>
+            <td class="col-num">5 400</td><td class="col-num">0.1</td>
+            <td class="col-num"><span class="score score-low">0.1</span></td>
+          </tr>
+          <tr>
+            <td class="col-api">Url_Field_1__c</td>
+            <td class="col-label">Web Profile</td>
+            <td>2025-04-23</td>
+            <td><span class="badge badge-url">url</span></td>
+            <td class="col-num">4 700</td><td class="col-num">0.1</td>
+            <td class="col-num"><span class="score score-low">0.1</span></td>
+          </tr>
+          <tr>
+            <td class="col-api">Duration_Field_1__c</td>
+            <td class="col-label">Duration (min)</td>
+            <td>2025-03-14</td>
+            <td><span class="badge badge-double">double</span></td>
+            <td class="col-num">3 900</td><td class="col-num">0.1</td>
+            <td class="col-num"><span class="score score-low">0.1</span></td>
+          </tr>
+          <tr>
+            <td class="col-api">Url_Field_2__c</td>
+            <td class="col-label">External URL</td>
+            <td>2025-03-13</td>
+            <td><span class="badge badge-url">url</span></td>
+            <td class="col-num">3 500</td><td class="col-num">0.1</td>
+            <td class="col-num"><span class="score score-low">0.1</span></td>
+          </tr>
+          <!-- ★ KEY ROW -->
+          <tr class="highlight-row">
+            <td class="col-api">Group_Field_1__c</td>
+            <td class="col-label">Group Assignment</td>
+            <td>2025-04-17</td>
+            <td><span class="badge badge-string">string</span></td>
+            <td class="col-num">3 400</td>
+            <td class="col-num">0.1</td>
+            <td class="col-num"><span class="score score-perfect">100.0</span></td>
+          </tr>
+          <tr>
+            <td class="col-api">Version_Field_1__c</td>
+            <td class="col-label">Version Reference</td>
+            <td>2025-03-13</td>
+            <td><span class="badge badge-string">string</span></td>
+            <td class="col-num">3 100</td><td class="col-num">0.1</td>
+            <td class="col-num"><span class="score score-low">0.1</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Right panel — Record Types (hidden until step 2) -->
+    <div class="rt-panel" id="rt-panel" style="display:none">
+      <div class="rt-header">
+        <span class="rt-col-rt">RecordType</span>
+        <span class="rt-col-num">Usage</span>
+        <span class="rt-col-total">Total</span>
+      </div>
+      <div class="rt-row">
+        <span class="rt-col-rt">Record Type A</span>
+        <span class="rt-col-num">3 300</span>
+        <span class="rt-col-total">3 300</span>
+      </div>
+      <div class="rt-pct-bar"><div class="rt-pct-fill" style="width:100%;background:#16a34a"></div></div>
+      <div class="rt-row">
+        <span class="rt-col-rt">Record Type B</span>
+        <span class="rt-col-num">100</span>
+        <span class="rt-col-total">20 800</span>
+      </div>
+      <div class="rt-pct-bar"><div class="rt-pct-fill" style="width:0.5%;background:#f97316"></div></div>
+      <div class="rt-row">
+        <span class="rt-col-rt">Record Type C</span>
+        <span class="rt-col-num">0</span>
+        <span class="rt-col-total">4 115 000</span>
+      </div>
+      <div class="rt-pct-bar"></div>
+      <div class="rt-row">
+        <span class="rt-col-rt">Record Type D</span>
+        <span class="rt-col-num">0</span>
+        <span class="rt-col-total">304 000</span>
+      </div>
+      <div class="rt-pct-bar"></div>
+      <div class="rt-row">
+        <span class="rt-col-rt">Record Type E</span>
+        <span class="rt-col-num">0</span>
+        <span class="rt-col-total">201 400</span>
+      </div>
+      <div class="rt-pct-bar"></div>
+      <div class="rt-row">
+        <span class="rt-col-rt">Record Type F</span>
+        <span class="rt-col-num">0</span>
+        <span class="rt-col-total">222 300</span>
+      </div>
+      <div class="rt-pct-bar"></div>
+      <div class="rt-row">
+        <span class="rt-col-rt">Other</span>
+        <span class="rt-col-num">0</span>
+        <span class="rt-col-total">158 800</span>
+      </div>
+      <div class="rt-pct-bar"></div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /app -->
+<script>
+  function applyStep1() {
+    var row = document.querySelector('tr.highlight-row');
+    if (!row) return;
+    var cells = row.querySelectorAll('td');
+    cells[5].classList.add('cell-spot'); // Percent
+    cells[6].classList.add('cell-spot'); // Score
+  }
+  function resetStep1() {
+    document.querySelectorAll('.cell-spot').forEach(function(c) { c.classList.remove('cell-spot'); });
+  }
+  function applyStep2() {
+    var panel = document.getElementById('rt-panel');
+    panel.style.display = '';
+    setTimeout(function() {
+      panel.classList.add('panel-spot');
+      var rows = panel.querySelectorAll('.rt-row');
+      rows[0].classList.add('rt-highlight'); // Record Type A
+      for (var i = 1; i < rows.length; i++) rows[i].classList.add('rt-dim');
+      panel.querySelectorAll('.rt-pct-bar:not(:first-of-type)').forEach(function(b) { b.classList.add('rt-dim'); });
+    }, 30);
+  }
+  function resetStep2() {
+    var panel = document.getElementById('rt-panel');
+    panel.classList.remove('panel-spot');
+    panel.querySelectorAll('.rt-highlight').forEach(function(r) { r.classList.remove('rt-highlight'); });
+    panel.querySelectorAll('.rt-dim').forEach(function(r) { r.classList.remove('rt-dim'); });
+    panel.style.display = 'none';
+  }
+  window.addEventListener('message', function(e) {
+    if      (e.data === 'ff-step-1')      applyStep1();
+    else if (e.data === 'ff-step-1-back') resetStep1();
+    else if (e.data === 'ff-step-2')      applyStep2();
+    else if (e.data === 'ff-step-2-back') resetStep2();
+  });
+</script>
+</body>
+</html>
