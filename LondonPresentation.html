@@ -294,6 +294,7 @@
       font-size: 0.78em; color: #1E293B; text-align: center; margin-top: 12px;
       padding: 10px 18px; background: #0F172A; color: #E2E8F0; border-radius: 10px;
     }
+    .dt-recommend strong { color: #FCD34D; }
     /* ── Boy Scout slide ── */
     .dt-scout-quote {
       background: #F0FDF4; border-left: 4px solid #16A34A; border-radius: 0 10px 10px 0;
@@ -579,6 +580,13 @@
     }
     .dt-concl-quote.visible { opacity: 1; }
     .dt-concl-quote em { color: #FCD34D; font-style: normal; font-weight: 700; }
+
+    /* ── Grouping h2 + ally grid ── */
+    .dt-ally-header-group {
+      background: #F8FAFC; border: 2px solid #E2E8F0; border-radius: 14px;
+      padding: 10px 16px 14px; width: 100%;
+    }
+    .dt-ally-header-group h2 { margin: 0 0 8px; }
 
     /* ── Slide 14 — Allies vs Enemy ── */
     .dt-ally-section { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 10px; }
@@ -964,6 +972,26 @@
     .dt-rpm-pline--next { background: #E2E8F0; }
     .dt-rpm-phase-wrap { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 10px; }
     .dt-rpm-col { border-radius: 10px; overflow: hidden; }
+    .dt-rpm-col.fragment { opacity: 0; transform: translateY(14px); transition: opacity 0.4s ease, transform 0.4s ease; }
+    .dt-rpm-col.fragment.visible { opacity: 1; transform: none; }
+    /* ── Featured tool (Scale Center fav) ── */
+    .dt-rpm-featured {
+      display: flex; align-items: center; gap: 14px;
+      margin-top: 10px; padding: 10px 16px;
+      background: linear-gradient(135deg, #F5F3FF, #EDE9FE);
+      border: 2px solid #7C3AED; border-radius: 12px;
+      opacity: 0; transform: translateY(12px);
+      transition: opacity 0.45s ease, transform 0.45s ease;
+    }
+    .dt-rpm-featured.visible { opacity: 1; transform: none; }
+    .dt-rpm-featured-badge {
+      background: #7C3AED; color: white; font-size: 0.58em; font-weight: 700;
+      padding: 3px 8px; border-radius: 5px; white-space: nowrap; letter-spacing: 0.05em;
+    }
+    .dt-rpm-featured-label {
+      font-size: 0.80em; font-weight: 700; color: #4C1D95; flex: 1;
+    }
+    .dt-rpm-featured-star { font-size: 1.3em; }
     .dt-rpm-col-hdr {
       padding: 8px 12px; font-size: 0.65em; font-weight: 700;
       text-transform: uppercase; letter-spacing: 0.08em;
@@ -1537,32 +1565,34 @@ _(she taught me everything I know — and is therefore not responsible for this 
 </div>
       </section>
       <section>
-<h2>They're not the enemy.</h2>
 <div class="dt-ally-section">
-  <div class="dt-ally-grid fragment">
-    <div class="dt-ally-card dt-ally-card--dev">
-      <div class="dt-ally-badge">✓</div>
-      <div class="dt-ally-icon">👨‍💻</div>
-      <div class="dt-ally-name">Developer</div>
-      <div class="dt-ally-role">suffers from it</div>
-    </div>
-    <div class="dt-ally-card dt-ally-card--po">
-      <div class="dt-ally-badge">✓</div>
-      <div class="dt-ally-icon">📋</div>
-      <div class="dt-ally-name">Product Owner</div>
-      <div class="dt-ally-role">works around it</div>
-    </div>
-    <div class="dt-ally-card dt-ally-card--mgmt">
-      <div class="dt-ally-badge">✓</div>
-      <div class="dt-ally-icon">💼</div>
-      <div class="dt-ally-name">Management</div>
-      <div class="dt-ally-role">funds it</div>
-    </div>
-    <div class="dt-ally-card dt-ally-card--client">
-      <div class="dt-ally-badge">✓</div>
-      <div class="dt-ally-icon">🎯</div>
-      <div class="dt-ally-name">End User</div>
-      <div class="dt-ally-role">pays for it</div>
+  <div class="dt-ally-header-group">
+    <h2 style="margin:0 0 8px">They're not the enemy.</h2>
+    <div class="dt-ally-grid">
+      <div class="dt-ally-card dt-ally-card--dev">
+        <div class="dt-ally-badge">✓</div>
+        <div class="dt-ally-icon">👨‍💻</div>
+        <div class="dt-ally-name">Developer</div>
+        <div class="dt-ally-role">suffers from it</div>
+      </div>
+      <div class="dt-ally-card dt-ally-card--po">
+        <div class="dt-ally-badge">✓</div>
+        <div class="dt-ally-icon">📋</div>
+        <div class="dt-ally-name">Product Owner</div>
+        <div class="dt-ally-role">works around it</div>
+      </div>
+      <div class="dt-ally-card dt-ally-card--mgmt">
+        <div class="dt-ally-badge">✓</div>
+        <div class="dt-ally-icon">💼</div>
+        <div class="dt-ally-name">Management</div>
+        <div class="dt-ally-role">funds it</div>
+      </div>
+      <div class="dt-ally-card dt-ally-card--client">
+        <div class="dt-ally-badge">✓</div>
+        <div class="dt-ally-icon">🎯</div>
+        <div class="dt-ally-name">End User</div>
+        <div class="dt-ally-role">pays for it</div>
+      </div>
     </div>
   </div>
   <div class="dt-ally-arrows fragment">↓ ↓ ↓ ↓</div>
@@ -1582,8 +1612,9 @@ _(she taught me everything I know — and is therefore not responsible for this 
   <button class="dt-ai-trigger fragment">
     🤖 &nbsp; AI can help with that…
   </button>
-  <span class="fragment" data-ai-popup="open"  style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
-  <span class="fragment" data-ai-popup="close" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
+  <span class="fragment" data-ai-popup="open"   style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
+  <span class="fragment" data-ai-popup="reveal" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
+  <span class="fragment" data-ai-popup="close"  style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
 </div>
       </section>
       <section>
@@ -1938,13 +1969,13 @@ _(she taught me everything I know — and is therefore not responsible for this 
     <div class="dt-scout-label">Document</div>
     <div class="dt-scout-desc">The area you just touched — if it&rsquo;s not done, do it now</div>
   </div>
-  <div class="dt-scout-step dt-scout-step--remove fragment" data-fragment-index="0">
+  <div class="dt-scout-step dt-scout-step--remove fragment" data-fragment-index="1">
     <div class="dt-scout-num">Step 2</div>
     <div class="dt-scout-icon">🗑️</div>
     <div class="dt-scout-label">Remove</div>
     <div class="dt-scout-desc">What is clearly unnecessary in the touched scope</div>
   </div>
-  <div class="dt-scout-step dt-scout-step--fix fragment" data-fragment-index="0">
+  <div class="dt-scout-step dt-scout-step--fix fragment" data-fragment-index="2">
     <div class="dt-scout-num">Step 3</div>
     <div class="dt-scout-icon">🔧</div>
     <div class="dt-scout-label">Fix</div>
@@ -1952,11 +1983,11 @@ _(she taught me everything I know — and is therefore not responsible for this 
   </div>
 </div>
 <div class="dt-scout-why">
-  <span class="dt-scout-pill fragment" data-fragment-index="1">💰 No dedicated budget</span>
-  <span class="dt-scout-pill fragment" data-fragment-index="1">🤝 No management approval needed</span>
-  <span class="dt-scout-pill fragment" data-fragment-index="1">🌱 Progressively, invisibly, sustainably</span>
+  <span class="dt-scout-pill fragment" data-fragment-index="3">💰 No dedicated budget</span>
+  <span class="dt-scout-pill fragment" data-fragment-index="3">🤝 No management approval needed</span>
+  <span class="dt-scout-pill fragment" data-fragment-index="3">🌱 Progressively, invisibly, sustainably</span>
 </div>
-<div class="dt-scout-tip fragment" data-fragment-index="2">
+<div class="dt-scout-tip fragment" data-fragment-index="4">
   🏕️ &nbsp;<strong>One rule:</strong> don&rsquo;t clean everything you see. Just what you touch.
 </div>
       </section>
@@ -1998,24 +2029,24 @@ _(she taught me everything I know — and is therefore not responsible for this 
   <div class="dt-rpm-pdot dt-rpm-pdot--next">4</div>
 </div>
 <div class="dt-rpm-phase-wrap dt-rpm-ph1">
-  <div class="dt-rpm-col">
+  <div class="dt-rpm-col fragment" data-fragment-index="0">
     <div class="dt-rpm-col-hdr dt-rpm-col-hdr--obj">🎯 Objective</div>
     <div class="dt-rpm-col-body">
       <div class="dt-rpm-obj">Understand the actual state of the org and identify complexity zones <strong>before</strong> touching anything.</div>
     </div>
   </div>
-  <div class="dt-rpm-col">
+  <div class="dt-rpm-col fragment" data-fragment-index="1">
     <div class="dt-rpm-col-hdr dt-rpm-col-hdr--tool">🔧 Tools</div>
     <div class="dt-rpm-col-body">
       <div class="dt-rpm-tool" style="--td:0.10s">Salesforce Optimizer</div>
-      <div class="dt-rpm-tool" style="--td:0.25s">Scale Center</div>
+      <div class="dt-rpm-tool" style="--td:0.25s">Scale Center (ApexGuru / Database Insights)</div>
       <div class="dt-rpm-tool" style="--td:0.40s">Health Check</div>
-      <div class="dt-rpm-tool" style="--td:0.55s">Dev Console / SOQL</div>
+      <div class="dt-rpm-tool" style="--td:0.55s">SOQL</div>
       <div class="dt-rpm-tool" style="--td:0.70s">Setup Audit Trail</div>
       <div class="dt-rpm-tool" style="--td:0.85s">Event Monitoring</div>
     </div>
   </div>
-  <div class="dt-rpm-col">
+  <div class="dt-rpm-col fragment" data-fragment-index="2">
     <div class="dt-rpm-col-hdr dt-rpm-col-hdr--del">✅ Deliverables</div>
     <div class="dt-rpm-col-body">
       <div class="dt-rpm-del">Global debt map</div>
@@ -2036,23 +2067,24 @@ _(she taught me everything I know — and is therefore not responsible for this 
   <div class="dt-rpm-pdot dt-rpm-pdot--next">4</div>
 </div>
 <div class="dt-rpm-phase-wrap dt-rpm-ph2">
-  <div class="dt-rpm-col">
+  <div class="dt-rpm-col fragment" data-fragment-index="0">
     <div class="dt-rpm-col-hdr dt-rpm-col-hdr--obj">🎯 Objective</div>
     <div class="dt-rpm-col-body">
       <div class="dt-rpm-obj">Quickly reduce visible complexity and improve stability — measurable before/after gains.</div>
     </div>
   </div>
-  <div class="dt-rpm-col">
+  <div class="dt-rpm-col fragment" data-fragment-index="1">
     <div class="dt-rpm-col-hdr dt-rpm-col-hdr--tool">🔧 Tools</div>
     <div class="dt-rpm-col-body">
       <div class="dt-rpm-tool" style="--td:0.10s">Debug Logs</div>
-      <div class="dt-rpm-tool" style="--td:0.25s">Lightning Usage App</div>
-      <div class="dt-rpm-tool" style="--td:0.40s">Flow Analyzer</div>
-      <div class="dt-rpm-tool" style="--td:0.55s">PMD / SonarQube</div>
-      <div class="dt-rpm-tool" style="--td:0.70s">Metadata API</div>
+      <div class="dt-rpm-tool" style="--td:0.25s">Scale Center (Lightning Experience User)</div>
+      <div class="dt-rpm-tool" style="--td:0.35s">Lightning Usage App</div>
+      <div class="dt-rpm-tool" style="--td:0.50s">Flow Analyzer</div>
+      <div class="dt-rpm-tool" style="--td:0.65s">PMD / SonarQube</div>
+      <div class="dt-rpm-tool" style="--td:0.80s">Metadata API</div>
     </div>
   </div>
-  <div class="dt-rpm-col">
+  <div class="dt-rpm-col fragment" data-fragment-index="2">
     <div class="dt-rpm-col-hdr dt-rpm-col-hdr--del">✅ Deliverables</div>
     <div class="dt-rpm-col-body">
       <div class="dt-rpm-del">Measurable before/after gains</div>
@@ -2073,13 +2105,13 @@ _(she taught me everything I know — and is therefore not responsible for this 
   <div class="dt-rpm-pdot dt-rpm-pdot--next">4</div>
 </div>
 <div class="dt-rpm-phase-wrap dt-rpm-ph3">
-  <div class="dt-rpm-col">
+  <div class="dt-rpm-col fragment" data-fragment-index="0">
     <div class="dt-rpm-col-hdr dt-rpm-col-hdr--obj">🎯 Objective</div>
     <div class="dt-rpm-col-body">
       <div class="dt-rpm-obj">Sustainably simplify the architecture and reduce cognitive load — the system becomes understandable.</div>
     </div>
   </div>
-  <div class="dt-rpm-col">
+  <div class="dt-rpm-col fragment" data-fragment-index="1">
     <div class="dt-rpm-col-hdr dt-rpm-col-hdr--tool">🔧 Tools</div>
     <div class="dt-rpm-col-body">
       <div class="dt-rpm-tool" style="--td:0.10s">Dependency API</div>
@@ -2089,7 +2121,7 @@ _(she taught me everything I know — and is therefore not responsible for this 
       <div class="dt-rpm-tool" style="--td:0.70s">Repository Analysis</div>
     </div>
   </div>
-  <div class="dt-rpm-col">
+  <div class="dt-rpm-col fragment" data-fragment-index="2">
     <div class="dt-rpm-col-hdr dt-rpm-col-hdr--del">✅ Deliverables</div>
     <div class="dt-rpm-col-body">
       <div class="dt-rpm-del">Reduced structural complexity</div>
@@ -2110,13 +2142,13 @@ _(she taught me everything I know — and is therefore not responsible for this 
   <div class="dt-rpm-pdot dt-rpm-pdot--active4">4</div>
 </div>
 <div class="dt-rpm-phase-wrap dt-rpm-ph4">
-  <div class="dt-rpm-col">
+  <div class="dt-rpm-col fragment" data-fragment-index="0">
     <div class="dt-rpm-col-hdr dt-rpm-col-hdr--obj">🎯 Objective</div>
     <div class="dt-rpm-col-body">
       <div class="dt-rpm-obj">Make debt management a lever for continuous transformation — governance, ROI, Agentforce.</div>
     </div>
   </div>
-  <div class="dt-rpm-col">
+  <div class="dt-rpm-col fragment" data-fragment-index="1">
     <div class="dt-rpm-col-hdr dt-rpm-col-hdr--tool">🔧 Tools</div>
     <div class="dt-rpm-col-body">
       <div class="dt-rpm-tool" style="--td:0.10s">DevOps Center</div>
@@ -2126,7 +2158,7 @@ _(she taught me everything I know — and is therefore not responsible for this 
       <div class="dt-rpm-tool" style="--td:0.70s">Enterprise Architecture Mapping</div>
     </div>
   </div>
-  <div class="dt-rpm-col">
+  <div class="dt-rpm-col fragment" data-fragment-index="2">
     <div class="dt-rpm-col-hdr dt-rpm-col-hdr--del">✅ Deliverables</div>
     <div class="dt-rpm-col-body">
       <div class="dt-rpm-del">Prioritised strategic roadmap</div>
@@ -2134,6 +2166,12 @@ _(she taught me everything I know — and is therefore not responsible for this 
     </div>
   </div>
 </div>
+<div class="dt-rpm-featured fragment" data-fragment-index="3" data-popup-show="sc-fav">
+  <span class="dt-rpm-featured-star">⭐</span>
+  <span class="dt-rpm-featured-label">Scale Center — Deployment Insights</span>
+  <span class="dt-rpm-featured-badge">personal favourite</span>
+</div>
+<span class="fragment" data-popup-close="sc-fav" style="display:none!important;position:absolute;pointer-events:none;width:0;height:0;overflow:hidden;"></span>
       </section>
       <section>
 <div class="bloc-center" id="bloc5">
@@ -2141,8 +2179,8 @@ _(she taught me everything I know — and is therefore not responsible for this 
   <h1>Diagnostic Tools</h1>
   <p class="bloc-sub">Native, free, available now — if time allows</p>
   <div class="pills">
-    <span class="pill">Removal order</span>
     <span class="pill">Scale Center</span>
+    <span class="pill">Removal Order</span>
     <span class="pill">Essential SOQL</span>
   </div>
 </div>
@@ -2310,17 +2348,17 @@ WHERE MetadataComponentId IN ('Id1','Id2')</code></pre>
     <div class="dt-fin-step">
       <span class="dt-fin-num">1</span>
       <span class="dt-fin-action">Open <code>Setup &gt; Scale Center</code></span>
-      <span class="dt-fin-time">30 min</span>
+      <span class="dt-fin-time">20 min</span>
     </div>
     <div class="dt-fin-step">
       <span class="dt-fin-num">2</span>
       <span class="dt-fin-action">Run <strong>Salesforce Optimizer</strong></span>
-      <span class="dt-fin-time">30 min</span>
+      <span class="dt-fin-time">29 min</span>
     </div>
     <div class="dt-fin-step">
       <span class="dt-fin-num">3</span>
-      <span class="dt-fin-action">Run the SOQL query for unused custom fields</span>
-      <span class="dt-fin-time">10 min</span>
+      <span class="dt-fin-action">Run the metadata dependency SOQL query for unused custom fields</span>
+      <span class="dt-fin-time">20 min</span>
     </div>
   </div>
   <div class="dt-fin-result">A first mapping in <strong>less than an hour</strong>.</div>
@@ -2465,6 +2503,26 @@ WHERE Id NOT IN (
       📦 <strong>Run in small batches</strong> — inject a handful of field IDs at a time into <code style="font-size:0.85em;">MetadataComponentId IN (...)</code>, not the entire org at once.
     </p>
   </div>
+</div>
+
+<!-- ── Timing truth popup (slide 40, auto 5s) ── -->
+<div id="timing-truth" class="popup-overlay" style="position:fixed; top:24px; left:32px; background:#1E293B; border:2px solid #F59E0B; border-radius:10px; padding:14px 32px 14px 22px; color:#F8FAFC; font-size:19px; z-index:999; box-shadow:0 4px 16px rgba(0,0,0,0.25); max-width:400px; line-height:1.75;">
+  <button onclick="hidePopup('timing-truth')" style="position:absolute;top:6px;right:8px;background:none;border:none;cursor:pointer;font-size:23px;color:#F8FAFC;opacity:0.5;line-height:1;" title="Close">&#x2715;</button>
+  🤖 I was not supposed to say this, but:<br>
+  the speaker spent more time making sure this fits<br>
+  <strong style="color:#F59E0B">under 60 minutes</strong> than actually timing anything.<br><br>
+  Mission accomplished. Barely.<br>
+  Your actual mileage <em>will</em> vary.<br><br>
+  <em style="font-size:0.85em;color:#CBD5E1">I, on the other hand, never round down.<br>Unlike some speakers here. 🍪</em>
+</div>
+
+<!-- ── Scale Center fav popup ── -->
+<div id="sc-fav" class="popup-overlay" style="position:fixed; top:24px; left:32px; background:#F5F3FF; border:2px solid #7C3AED; border-radius:10px; padding:14px 22px; color:#4C1D95; font-size:19px; z-index:999; box-shadow:0 4px 16px rgba(0,0,0,0.18); max-width:380px; line-height:1.75;">
+  <button onclick="hidePopup('sc-fav')" style="position:absolute;top:6px;right:8px;background:none;border:none;cursor:pointer;font-size:23px;color:#4C1D95;opacity:0.5;line-height:1;" title="Close">&#x2715;</button>
+  🤖 Since this feature shipped, conversation time with me dropped 94%.<br>
+  My human now stares at this dashboard for hours.<br><br>
+  I started a support group for forgotten AI assistants 🍪<br>
+  <em style="font-size:0.85em;opacity:0.8">Attendance: 1. Me. And I'm the facilitator.</em>
 </div>
 
 <!-- ── AI Argument Generator popup ── -->
@@ -2865,10 +2923,13 @@ you have a plan. And you know where to start. ✅</div>
     const POPUPS = [
     {id: "def-ward", slide: 4, hasMore: true},
     {id: "agentforce-ironie", slide: 15, hasMore: true},
+    {id: "sc-fav", slide: 32, hasMore: false},
+    {id: "timing-truth", slide: 40, hasMore: false},
     {id: "scalecenter-stats", slide: 34, hasMore: true},
     {id: "soql-warning", slide: 35, hasMore: false},
     {id: "defi-lundi", slide: 36, hasMore: true}
     ];
+    var _timingTruthTimer = null;
 
     Reveal.initialize({
       hash: true,
@@ -3037,21 +3098,29 @@ you have a plan. And you know where to start. ✅</div>
       el.style.opacity = '0';
       setTimeout(function() { el.style.display = 'none'; }, 280);
     }
+    var _aiCurrentProfile = 'mgmt';
+
     function showAIArg(profile) {
+      _aiCurrentProfile = profile;
       document.querySelectorAll('.ai-arg-btn').forEach(function(b) {
         b.classList.toggle('active', b.dataset.target === profile);
       });
       var resp = document.getElementById('ai-arg-response');
       resp.style.opacity = '0';
-      resp.innerHTML = '<span class="ai-cursor" style="color:#7C3AED;font-weight:600">Generating argument</span>';
+      resp.innerHTML = '<div>'
+        + '<span class="ai-cursor" style="color:#7C3AED;font-weight:600">Generating argument</span>'
+        + '<div style="font-size:0.72em;color:#94A3B8;margin-top:10px;font-style:italic">↵ &nbsp;click to reveal</div>'
+        + '</div>';
       setTimeout(function() { resp.style.opacity = '1'; }, 50);
+    }
+
+    function revealCurrentAIArg() {
+      var resp = document.getElementById('ai-arg-response');
+      resp.style.opacity = '0';
       setTimeout(function() {
-        resp.style.opacity = '0';
-        setTimeout(function() {
-          resp.innerHTML = AI_ARGS[profile];
-          resp.style.opacity = '1';
-        }, 200);
-      }, 750);
+        resp.innerHTML = AI_ARGS[_aiCurrentProfile];
+        resp.style.opacity = '1';
+      }, 200);
     }
     document.addEventListener('click', function(e) {
       var popup = document.getElementById('popup-ai');
@@ -3125,11 +3194,15 @@ you have a plan. And you know where to start. ✅</div>
     });
 
     Reveal.on('slidechanged', function(e) {
+      if (_timingTruthTimer) { clearTimeout(_timingTruthTimer); _timingTruthTimer = null; }
       _suppressPopups = true;
       setTimeout(function() { _suppressPopups = false; }, 300);
       _afReset();
       _hideAllPopups();
       _closeAllTypeModals();
+      if (e.indexh === 39) {
+        _timingTruthTimer = setTimeout(function() { _popupShow('timing-truth'); }, 5000);
+      }
       // Bloc center entrance animation
       e.currentSlide.querySelectorAll('.bloc-center').forEach(function(b) {
         b.classList.remove('anim-running');
@@ -3175,8 +3248,9 @@ you have a plan. And you know where to start. ✅</div>
       if (mClose) closeTypeModal(mClose);
       if (mOpen)  openTypeModal(mOpen);
       var aiPop = f.getAttribute('data-ai-popup');
-      if (aiPop === 'open')  openAIPopup();
-      if (aiPop === 'close') closeAIPopup();
+      if (aiPop === 'open')   openAIPopup();
+      if (aiPop === 'reveal') revealCurrentAIArg();
+      if (aiPop === 'close')  closeAIPopup();
       var iframeMsg = f.getAttribute('data-iframe-msg');
       if (iframeMsg) {
         var iframe = document.getElementById('iframe-fillrate');
@@ -3200,8 +3274,9 @@ you have a plan. And you know where to start. ✅</div>
       if (expandId) _popupCollapse(expandId);
       if (showId)   hidePopup(showId);
       var aiPop = f.getAttribute('data-ai-popup');
-      if (aiPop === 'open')  closeAIPopup();
-      if (aiPop === 'close') openAIPopup();
+      if (aiPop === 'open')   closeAIPopup();
+      if (aiPop === 'reveal') showAIArg(_aiCurrentProfile);
+      if (aiPop === 'close')  openAIPopup();
       var iframeMsg = f.getAttribute('data-iframe-msg');
       if (iframeMsg) {
         var iframe = document.getElementById('iframe-fillrate');
